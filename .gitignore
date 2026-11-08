@@ -1,0 +1,16 @@
+/*
+!/.gitignore
+!/.gitattributes
+!/AGENTS.md
+!/README.md
+!/CHANGELOG.md
+!/THIRD_PARTY_NOTICES.md
+!/VERSION
+!/index.html
+!/assets/
+!/tools/
+!/.github/
+__pycache__/
+*.pyc
+.env
+.env.*

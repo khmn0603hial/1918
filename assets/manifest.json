@@ -1,0 +1,96 @@
+{
+  "baseline": {
+    "version": "17.7",
+    "filename": "1918_서부전선_V17.7_거점수비와시험병기.html",
+    "bytes": 78883553,
+    "sha256": "6ed6f373378be58b8d116b52b9ac207da90bbb8169f5cc3d8f6ae1bed693e46e",
+    "newline": "CRLF"
+  },
+  "assets": {
+    "assets/media/9013763a6a2ad4b827d9892a5aa3089cf9eb8b6ec02158e0119c31d942b32dfa.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "9013763a6a2ad4b827d9892a5aa3089cf9eb8b6ec02158e0119c31d942b32dfa",
+      "bytes": 17808
+    },
+    "assets/media/49230c850b0d3a278aee2871ca684cf4bc87bf4dd1ecc8f453f425bff2dce27c.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "49230c850b0d3a278aee2871ca684cf4bc87bf4dd1ecc8f453f425bff2dce27c",
+      "bytes": 3622107
+    },
+    "assets/media/899d26ad271f80df82468f4ca35dd1ad11b48ff191fd288ed7dba2d8fe32db03.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "899d26ad271f80df82468f4ca35dd1ad11b48ff191fd288ed7dba2d8fe32db03",
+      "bytes": 1721443
+    },
+    "assets/media/fb921a09cc6181228b14945c7a6b90b50a83f4f38a37644a383bf7c70ea83729.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "fb921a09cc6181228b14945c7a6b90b50a83f4f38a37644a383bf7c70ea83729",
+      "bytes": 7034419
+    },
+    "assets/media/4652007dad67295f1f5c87c8cbc8e2df1a530e7671266a29f693a084375d3910.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "4652007dad67295f1f5c87c8cbc8e2df1a530e7671266a29f693a084375d3910",
+      "bytes": 10000906
+    },
+    "assets/media/fa5bfe904dd4902b9eb66d8df518a91adde41fb6d1687aefb5af1a2de7da28da.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "fa5bfe904dd4902b9eb66d8df518a91adde41fb6d1687aefb5af1a2de7da28da",
+      "bytes": 17595203
+    },
+    "assets/media/4c0a2e9351906fd2f793634aeb3bceddf6171999b5388a79e600aa489413ae4a.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "4c0a2e9351906fd2f793634aeb3bceddf6171999b5388a79e600aa489413ae4a",
+      "bytes": 17885773
+    },
+    "assets/media/29a62d938377bdd0e919202a48d9a716c390a399e37fd9527e3e6f6835f7f6f0.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "29a62d938377bdd0e919202a48d9a716c390a399e37fd9527e3e6f6835f7f6f0",
+      "bytes": 14788
+    },
+    "assets/media/80bfb00caafaed6fe3edfe489f28e85e3416ee8042865cf599cb2aa8cffecc53.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "80bfb00caafaed6fe3edfe489f28e85e3416ee8042865cf599cb2aa8cffecc53",
+      "bytes": 18115
+    },
+    "assets/media/38f69958ac44a2831a9093423e5411aedc169410c573ea17ef754120db1efedc.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "38f69958ac44a2831a9093423e5411aedc169410c573ea17ef754120db1efedc",
+      "bytes": 22073
+    },
+    "assets/media/a7c4cafb600b5403821b27efdee708e30e304a25700532bd0151397f4c7155f6.mp3": {
+      "mime": "audio/mpeg",
+      "sha256": "a7c4cafb600b5403821b27efdee708e30e304a25700532bd0151397f4c7155f6",
+      "bytes": 9821
+    },
+    "assets/media/2d24ac4889a880216c7df14921450167d3312e94b0bcd5181e80200d525572db.wav": {
+      "mime": "audio/wav",
+      "sha256": "2d24ac4889a880216c7df14921450167d3312e94b0bcd5181e80200d525572db",
+      "bytes": 4806
+    },
+    "assets/media/a3d2b24619fc08dd11eaf9152a06fda28f24497dc44a9208ee78fceec4a82d2c.wav": {
+      "mime": "audio/wav",
+      "sha256": "a3d2b24619fc08dd11eaf9152a06fda28f24497dc44a9208ee78fceec4a82d2c",
+      "bytes": 46702
+    },
+    "assets/media/a53518b6c1b6c8b0d88e28e2ef04b3f374d5bc3b15c2e6037441656131c7a0f5.wav": {
+      "mime": "audio/wav",
+      "sha256": "a53518b6c1b6c8b0d88e28e2ef04b3f374d5bc3b15c2e6037441656131c7a0f5",
+      "bytes": 23408
+    },
+    "assets/media/81816cc43ff29838d1f62d0296eb8306ba702591b6dedbfa77695ec20b546da0.wav": {
+      "mime": "audio/wav",
+      "sha256": "81816cc43ff29838d1f62d0296eb8306ba702591b6dedbfa77695ec20b546da0",
+      "bytes": 7128
+    },
+    "assets/media/60502b2747e21337274c691a513e5327f6ba42a080b23447a8c111a13fbf0327.wav": {
+      "mime": "audio/wav",
+      "sha256": "60502b2747e21337274c691a513e5327f6ba42a080b23447a8c111a13fbf0327",
+      "bytes": 4048
+    },
+    "assets/media/827003d6081c62dc0b7a215e36f96ea89151c33a1c90abf4a0c07207d8988fc7.wav": {
+      "mime": "audio/wav",
+      "sha256": "827003d6081c62dc0b7a215e36f96ea89151c33a1c90abf4a0c07207d8988fc7",
+      "bytes": 122428
+    }
+  }
+}
