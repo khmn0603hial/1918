@@ -189,6 +189,24 @@ const HSH=location.hash,MY=OP_BOOT?OP_BOOT.team:/^#(?:deploy-)?g/.test(HSH)?1:0;
 const STORY_MAP=OP_BOOT?.scenario??Number(HSH.match(/[1-7]/)?.[0]||1+Math.floor(Math.random()*7));
 const MAP=OP_OUTER?1:STORY_MAP===7?3:STORY_MAP;
 function storyPlace(){return OP_BOOT?OP_NAMES[STORY_MAP]+' 작전 · '+opRegionNames(STORY_MAP)[OP_BOOT.front]:MAPN[STORY_MAP]}
+// Keep authored combat spaces intact. Insert open ground between each rear base and the field.
+const OUTER_FLAG_ROWS=[
+  [[-15,-36],[16,-4],[-8,30]],
+  [[-22,-45],[18,-35],[-36,-18],[5,-9],[28,8],[-19,17],[34,32],[-7,46]],
+  [[15,-39],[-22,-16],[4,8],[24,31]],
+  [[-14,-42],[22,-24],[-13,-1],[14,20],[-5,40]]
+];
+const approachOffsets=[-1,1].map(sign=>{
+  if(!OP_OUTER&&MAP===5)return 0;
+  const variant=OP_OUTER?OP_BOOT.front-(OP_BOOT.front>2?1:0):0;
+  const edge=OP_OUTER?Math.max(...OUTER_FLAG_ROWS[variant].map((p,i)=>sign*(p[1]+Math.round(3*Math.cos(STORY_MAP*.85+i))))):STORY_MAP===3?16:STORY_MAP===1?43:44;
+  return (72-edge)*11;
+});
+function rearZ(z){return z+(z<0?-approachOffsets[0]:approachOffsets[1])}
+function rearDepth(sign){return approachOffsets[sign<0?0:1]}
+function atBase(z,start=60){return Math.abs(z)>=start+rearDepth(z)}
+function inWorldZ(z,extent=83){return z>=rearZ(-extent)&&z<=rearZ(extent)}
+function clampWorldZ(z,extent=83){return Math.max(rearZ(-extent),Math.min(rearZ(extent),z))}
 const MAPN={1:'루덴도르프 공세 (1918)',2:'솜 전투 (1916 플랑드르 들판)',3:'베르됭 요새 (1916 야간 폭우)',4:'탄넨베르크 (1914)',5:'시베리아횡단철도 (1918)',6:'시나이 반도 (1917 아랍 반란)'};
 const $=id=>document.getElementById(id),R=(a,b)=>a+Math.random()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 /* ---------- 렌더러 (듀얼 카메라) ---------- */
@@ -230,11 +248,32 @@ function sectorDepth(x,z){
   return u+v<=1?a[i]*(1-u-v)+a[i+1]*u+a[i+66]*v:a[i+67]*(u+v-1)+a[i+1]*(1-v)+a[i+66]*(1-u);
 }
 function getTerrainElevation(x,z){const az=Math.abs(z);
+  if(az>60&&!atBase(z))return HI+approachHeight(x,z);
   if(MAP===5||MAP===6)return HI+sectorDepth(x,z);
   if(MAP===4){if(az<16){const bridge=bridgeSurface(x,z);return bridge??riverBedElevation(z)}if(az<20&&[-42,0,42].some(b=>Math.abs(x-b)<3.5))return HI+.8*(20-az)/4;return HI+sectorDepth(x,z)}
-  if(az>=60){const step=firingStepElevation(x,z);if(step!==null)return step;for(const s of STAIRS)if(Math.abs(x-s)<SW&&az<60+RAMP)return HI*(60+RAMP-az)/RAMP;return trenchGridOpen(x,z)?0:HI}
+  if(atBase(z)){const step=firingStepElevation(x,z);if(step!==null)return step;for(const s of STAIRS)if(Math.abs(x-s)<SW&&az<rearDepth(z)+60+RAMP)return HI*(rearDepth(z)+60+RAMP-az)/RAMP;return trenchGridOpen(x,az-rearDepth(z))?0:HI}
   if(MAP===3){if(x>-9&&x<-5&&z>-9&&z<-1)return HI+FORT_RISE*(z+9)/8;if(x>5&&x<9&&z>1&&z<9)return HI+FORT_RISE*(9-z)/8}
   let h=HI+sectorDepth(x,z);for(const m of HILLS){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r)h+=m.h*(1-d/m.r)}return h;
+}
+function buildApproachGround(){
+  const colors=[0,0x635744,0x63794d,0x393730,0x646b46,0xd9e4ec,0xcdb07a,0x9a9c8f];
+  for(const sg of [-1,1]){
+    const gap=rearDepth(sg);if(!gap)continue;
+    const zMid=sg*(60+gap/2),geometry=new THREE.PlaneGeometry(130,gap,16,Math.ceil(gap/8));
+    const pos=geometry.attributes.position,shades=[];
+    for(let i=0;i<pos.count;i++){
+      const x=pos.getX(i),z=zMid-pos.getY(i),noise=.94+.06*Math.sin(x*.09+z*.13)*Math.cos(z*.05);
+      pos.setZ(i,approachHeight(x,z));shades.push(noise,noise,noise);
+    }
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(shades,3));geometry.computeVertexNormals();
+    const mat=STORY_MAP===6?desertFloor(130,gap):new THREE.MeshLambertMaterial({color:colors[STORY_MAP]});
+    mat.vertexColors=true;const m=new THREE.Mesh(geometry,mat);m.rotation.x=-Math.PI/2;m.position.set(0,HI,zMid);scene.add(m);solids.push(m);
+  }
+}
+function approachHeight(x,z){
+  const depth=Math.abs(z)-60,gap=rearDepth(z);
+  if(depth<=0||depth>=gap)return 0;
+  return Math.min(1,depth/20,(gap-depth)/20)*(.7+.45*Math.sin(x*.045+z*.032)+.25*Math.cos(z*.069-x*.018));
 }
 function buildZigzagTrenches(){
   if(MAP>=4)return;
@@ -242,25 +281,25 @@ function buildZigzagTrenches(){
     for(let z=60;z<84;z+=2){let start=null;
       for(let x=-64;x<=64;x+=2){const soil=x<64&&!trenchGridOpen(x+1,sg*(z+1));
         if(soil&&start===null)start=x;
-        if(!soil&&start!==null){addBox(x-start,HI,2,STORY_MAP===6?0xc69a67:0x63523a,(x+start)/2,0,sg*(z+1));start=null}
+        if(!soil&&start!==null){addBox(x-start,HI,2,STORY_MAP===6?0xc69a67:0x63523a,(x+start)/2,0,rearZ(sg*(z+1)));start=null}
       }
     }
     for(const st of STAIRS){if(MAP===4)continue;
       const m=new THREE.Mesh(new THREE.BoxGeometry(SW*2,.18,Math.hypot(RAMP,HI)),M(0x8e6d42));
-      m.position.set(st,HI/2-.09,sg*(60+RAMP/2));m.rotation.x=sg*Math.atan(HI/RAMP);scene.add(m);solids.push(m);
-      for(let k=1;k<7;k++)addBox(SW*2,.06,.14,0x5a4128,st,HI*(1-k/7),sg*(60+RAMP*k/7),false);
+      m.position.set(st,HI/2-.09,rearZ(sg*(60+RAMP/2)));m.rotation.x=sg*Math.atan(HI/RAMP);scene.add(m);solids.push(m);
+      for(let k=1;k<7;k++)addBox(SW*2,.06,.14,0x5a4128,st,HI*(1-k/7),rearZ(sg*(60+RAMP*k/7)),false);
     }
-    for(let x=-60;x<=60;x+=4){const az=trenchAxis(x);addBox(.15,1.7,.15,0x463425,x,.1,sg*(az-2.5),false);addBox(.15,1.7,.15,0x463425,x,.1,sg*(az+2.5),false);
-      const plank=new THREE.Mesh(new THREE.BoxGeometry(2.1,.06,1.2),M(0x715b3a));plank.position.set(x,.04,sg*az);scene.add(plank);
+    for(let x=-60;x<=60;x+=4){const az=trenchAxis(x);addBox(.15,1.7,.15,0x463425,x,.1,rearZ(sg*(az-2.5)),false);addBox(.15,1.7,.15,0x463425,x,.1,rearZ(sg*(az+2.5)),false);
+      const plank=new THREE.Mesh(new THREE.BoxGeometry(2.1,.06,1.2),M(0x715b3a));plank.position.set(x,.04,rearZ(sg*az));scene.add(plank);
     }
-    addBox(130,3,.4,0x4a3d2c,0,0,sg*84.8);
+    addBox(130,3,.4,0x4a3d2c,0,0,rearZ(sg*84.8));
   }
 }
 
 function groundAt(x,z,y){let h=getTerrainElevation(x,z);for(const c of cols)if(x>c.a-.3&&x<c.b+.3&&z>c.c-.3&&z<c.e+.3&&c.hi<=y+.7&&c.hi>h)h=c.hi;return h}
 function blocked(x,z,y,r){if(getTerrainElevation(x,z)-y>.6)return true;
  for(const c of cols)if(x>c.a-r&&x<c.b+r&&z>c.c-r&&z<c.e+r&&y+1.8>c.lo&&y+.5<c.hi)return true;return false}
-function move(e,dx,dz,r=.45){if(SWAMPS.length&&inSwamp(e.x,e.z)){const k=e.tank?.7:.5;dx*=k;dz*=k}if(!blocked(e.x+dx,e.z,e.y,r))e.x+=dx;if(!blocked(e.x,e.z+dz,e.y,r))e.z+=dz;e.x=cl(e.x,-62,62);e.z=cl(e.z,-83,83)}
+function move(e,dx,dz,r=.45){if(SWAMPS.length&&inSwamp(e.x,e.z)){const k=e.tank?.7:.5;dx*=k;dz*=k}if(!blocked(e.x+dx,e.z,e.y,r))e.x+=dx;if(!blocked(e.x,e.z+dz,e.y,r))e.z+=dz;e.x=cl(e.x,-62,62);e.z=clampWorldZ(e.z)}
 var sinaiSandTexture;
 function desertFloor(w,d){
  if(!sinaiSandTexture){
@@ -279,19 +318,19 @@ function desertFloor(w,d){
 }
 function plane(w,d,y,z,c){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),STORY_MAP===6?desertFloor(w,d):M(c));m.rotation.x=-Math.PI/2;m.position.set(0,y,z);scene.add(m);solids.push(m)}
 if(MAP===4){plane(130,44,HI,-38,0x697548);plane(130,44,HI,38,0x697548);plane(130,32,HI-1.6,0,0x526653)}else plane(130,120,HI,0,MAP===6?0xcdb07a:MAP===2?0x4f8a35:MAP===3?0x2a2a26:0x6e5f45);              // 무인지대 (참호 구역 z>60 은 비워둠 → Z-fighting 없음)
-plane(130,25,0,72.5,0x4d4130);plane(130,25,0,-72.5,0x4d4130);
+plane(130,25,0,rearZ(72.5),0x4d4130);plane(130,25,0,rearZ(-72.5),0x4d4130);
 buildZigzagTrenches();
-addBox(.5,3.5,170,0x4a3d2c,-65,0,0,false);addBox(.5,3.5,170,0x4a3d2c,65,0,0,false);
+for(const x of[-65,65])addBox(.5,3.5,rearZ(85)-rearZ(-85),0x4a3d2c,x,0,(rearZ(85)+rearZ(-85))/2,false);
 /* ---------- 중앙 벙커 (4방향 8m 아치 입구, 투명벽 없음) ---------- */
 const CON=0x8d8c86;
-if(MAP===1){const bunkerStart=solids.length;for(const sg of[-1,1]){addBox(8,5,2,CON,sg*8,HI,-11);addBox(8,5,2,CON,sg*8,HI,11);addBox(2,5,8,CON,-11,HI,sg*8);addBox(2,5,8,CON,11,HI,sg*8)}
-markStructureRange(bunkerStart,'ludendorff-walls');addBox(25,1,25,0x77766f,0,HI+5,0);                            // 지붕
-addBox(1.4,1,1.4,0x6a4d28,6,HI,6)}                              // MG 탁자
+if(MAP===1){for(const sg of[-1,1]){addBox(8,5,2,CON,sg*8,HI,-11);addBox(8,5,2,CON,sg*8,HI,11);addBox(2,5,8,CON,-11,HI,sg*8);addBox(2,5,8,CON,11,HI,sg*8)}
+addBox(25,1,25,0x77766f,0,HI+5,0);                            // 지붕
+const divider=solids.length;addBox(.3,2.6,3.4,0x77756c,5,HI,5);markStructureRange(divider,'ludendorff-partition',true);addBox(1.4,1,1.4,0x6a4d28,6,HI,6)}                              // MG 탁자
 /* ---------- 건물 / 산 / 숲 / 엄폐지 ---------- */
 const REG=[],RC={building:'#b0b0a0',mountain:'#8a7a40',forest:'#2f6a2f',cover:'#d4c080',trench:'#6a5a45',swamp:'#3d7a6a'},VAL={building:3,mountain:2.6,forest:2,cover:1.8,trench:3,swamp:.8};
 const reg=(t,n,x,z,r,o)=>{const g=Object.assign({t,n,x,z,r},o);REG.push(g);return g};
 const houseAt=(x,z,m=0)=>REG.find(g=>g.house&&Math.abs(x-g.x)<g.hx+m&&Math.abs(z-g.z)<g.hz+m);
-if(MAP===1)reg('building','중앙 벙커',0,0,13);reg('trench','아군 참호',0,-72,16);reg('trench','적 참호',0,72,16);
+if(MAP===1)reg('building','중앙 벙커',0,0,13);reg('trench','아군 참호',0,rearZ(-72),16);reg('trench','적 참호',0,rearZ(72),16);
 for(const m of HILLS){const c=new THREE.Mesh(new THREE.ConeGeometry(m.r,m.h,28),M(MAP===2?0x5a9a3a:0x6b6a3e));c.position.set(m.x,HI+m.h/2,m.z);scene.add(c);solids.push(c);reg('mountain',MAP===2?'언덕':'고지',m.x,m.z,m.r*.8)}
 /* ---------- 솜 / 베르됭 ---------- */
 const ZREG={},FZC={'1h':[0,0],'1nw':[-19,-10],'1ne':[19,-10],'1sw':[-19,10],'1se':[19,10],'2c':[0,-5],'2w':[-18,1],'2e':[18,1],'2s':[0,12.3]};
@@ -302,7 +341,7 @@ if(MAP===2){const N=700,fm=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,
  for(const q of SWAMPS){const w=new THREE.Mesh(new THREE.CircleGeometry(q.r,28),new THREE.MeshBasicMaterial({color:0x2f6a5e,transparent:true,opacity:.8}));w.rotation.x=-Math.PI/2;w.position.set(q.x,HI+.04,q.z);scene.add(w);reg('swamp','늪지',q.x,q.z,q.r)}}
 if(MAP===3){const CF=0x6f7068,Y1=HI,H1=FORT_RISE-FORT_SLAB,Y2=FORT_UPPER,Y3=FORT_ROOF;
  const wallH=(ax,f,a,b,y0,y1,holes,col,th)=>{const start=solids.length;const seg=(p,q,lo,hi)=>{if(q-p<.05||hi-lo<.05)return;if(ax==='x')addBox(q-p,hi-lo,th,col,(p+q)/2,y0+lo,f);else addBox(th,hi-lo,q-p,col,f,y0+lo,(p+q)/2)};
-  let cur=a;for(const h of holes.slice().sort((p,q)=>p[0]-q[0])){seg(cur,h[0],0,y1-y0);seg(h[0],h[1],0,h[2]);seg(h[0],h[1],h[3],y1-y0);cur=h[1]}seg(cur,b,0,y1-y0);if(y0===Y1&&(ax==='z'&&Math.abs(f)===10||ax==='x'&&f===0)||y0===Y2&&(ax==='z'&&Math.abs(f)===12||ax==='x'&&f===10.5))markStructureRange(start,'verdun-partitions',true);else if(y0===Y1&&(ax==='x'||ax==='z'&&Math.abs(f)===28))markStructureRange(start,'verdun-exterior:'+ax+f)};
+  let cur=a;for(const h of holes.slice().sort((p,q)=>p[0]-q[0])){seg(cur,h[0],0,y1-y0);seg(h[0],h[1],0,h[2]);seg(h[0],h[1],h[3],y1-y0);cur=h[1]}seg(cur,b,0,y1-y0);if(y0===Y1&&(ax==='z'&&Math.abs(f)===10||ax==='x'&&f===0)||y0===Y2&&(ax==='z'&&Math.abs(f)===12||ax==='x'&&f===10.5))markStructureRange(start,'verdun-partitions',true);};
  const slits=cs=>cs.map(c=>[c-.6,c+.6,1,2.2]);
  wallH('x',-20,-28,28,Y1,Y1+H1,[[-5,5,0,3.6],...slits([-20,-12,12,20])],CF,1.5);wallH('x',20,-28,28,Y1,Y1+H1,[[-5,5,0,3.6],...slits([-20,-12,12,20])],CF,1.5);
  wallH('z',-28,-20,20,Y1,Y1+H1,slits([-14,-6,6,14]),CF,1.5);wallH('z',28,-20,20,Y1,Y1+H1,slits([-14,-6,6,14]),CF,1.5);
@@ -337,7 +376,7 @@ function house(x,z,n){const start=solids.length,w=7,d=6,hh=4,y=HI,c=0xa59a86;
   for(const h of hs){seg(ax,f,cur,h.q[0],0,hh);if(h.t==='w'){seg(ax,f,h.q[0],h.q[1],0,1);seg(ax,f,h.q[0],h.q[1],2.4,hh)}else seg(ax,f,h.q[0],h.q[1],3,hh);cur=h.q[1]}seg(ax,f,cur,half,0,hh)};
  wall('x',-d/2,w/2,[[-1,1]],null);wall('x',d/2,w/2,[[-2.5,-1.5],[1.5,2.5]],[-1,1]);wall('z',-w/2,d/2,[[-1,1]],null);wall('z',w/2,d/2,[[-1,1]],null);
  if(n==='교회')slabHole(w+.6,d+.6,.4,0x6b3b2b,x,y+hh,z,-3.25,3.1,-2.75,-1.0);else addBox(w+.6,.4,d+.6,0x6b3b2b,x,y+hh,z);
- if(n==='교회')addHouseUpperStoreys(x,z,y+hh+.4,2);markStructureRange(start,'house:'+x+','+z);
+ if(n==='교회')addHouseUpperStoreys(x,z,y+hh+.4,2);markHouseRange(start,'house:'+x+','+z,x,z,w,d);
  reg('building',n,x,z,7,{house:true,hx:w/2,hz:d/2,posts:[{x,z:z-d/2+1.2},{x:x-2,z:z+d/2-1.2},{x:x+2,z:z+d/2-1.2},{x:x-w/2+1.2,z},{x:x+w/2-1.2,z}],din:{x,z:z+d/2-1.6},dout:{x,z:z+d/2+2.4}})}
 if(MAP===1){house(-30,18,'농가');house(34,-14,'폐허');house(-14,-32,'교회')}
 function tree(x,z){const start=solids.length,y0=getTerrainElevation(x,z);addBox(.8,4,.8,0x5a3a1e,x,y0,z);const f=new THREE.Mesh(new THREE.ConeGeometry(2.4,5,7),M(0x2f5a2f));f.position.set(x,y0+6,z);scene.add(f);markStructureRange(start,'tree:'+x+','+z);solids[start].userData.structure.foliage=f}
@@ -476,7 +515,7 @@ addEventListener('pagehide',stopBattleMusic);
 
 /* ---------- 상태 ---------- */
 let noLock=false;const keys={};let started=false,over=false,ads=false,mouseL=false,yaw=0,pitch=0,shake=0,kick=0,bl=8,flash=0,bob=0,cur=0,hmT=0,roll=0,pOff=0;
-const P={x:0,y:0,z:-70,vy:0,hp:100,team:MY,alive:true,cd:0,rt:0,ground:true,kills:0,eye:1.65,hc:1.1,hr2:.36,crouch:false,horse:null};
+const P={x:0,y:0,z:rearZ(-70),vy:0,hp:100,team:MY,alive:true,cd:0,rt:0,ground:true,kills:0,eye:1.65,hc:1.1,hr2:.36,crouch:false,horse:null};
 const tickets=[1000,1000];
 const VAR={lee:{n:'리 엔필드 SMLE',cls:0,mm:10,res:50,rate:.95,dmg:95,auto:0,rt:3},kar:{n:'Kar98',cls:0,mm:5,res:45,rate:1.15,dmg:100,auto:0,rt:2.6},
  vp:{n:'비야르 페로사 M1915',cls:1,mm:25,res:100,rate:.07,dmg:20,auto:1,rt:2.4},mp18:{n:'MP18',cls:1,mm:32,res:160,rate:.075,dmg:24,auto:1,rt:2.2},
@@ -644,11 +683,11 @@ function mkTank(type,team,x,z){const c=TT[type],g=new THREE.Group(),L=type==='ft
  for(const sx of[-1,1]){add(g,.18,.7,.18,0x1a1a1a,sx*W*.28,1.95,-L/2+.45);add(g,.26,.12,.26,0x884422,sx*W*.28,2.35,-L/2+.45);add(g,.25,.2,.1,0xffe08a,sx*W*.3,1.3,L/2+.02)}add(g,W*.8,.5,.9,0x3a3a30,0,1.4,-L/2+.6);
  scene.add(g);g.rotation.order='YXZ';const t={tank:true,type,team,x,y:getTerrainElevation(x,z),z,hp:c.hp,maxhp:c.hp,alive:true,hull:team?Math.PI:0,tur:team?Math.PI:0,cd:2,sc:0,tg:null,pt:0,px:x,pz:z,av:0,avd:1,id:BID++,hv:-1,lx:null,ox:0,tf:0,g,turG:tur,drv:false,hc:1.4,hr2:5,sp:c.sp,len:L,wd:W,pitch:0,mv:0};
  tanks.push(t);ENT.push(t);assign(t);t.hv=HQ[team].v;syncTank(t);return t}
-function moveTank(t,dx,dz){const ox=t.x,oz=t.z;if(Math.abs(t.z+dz)>=57&&Math.abs(t.z+dz)>Math.abs(t.z))dz=0;
+function moveTank(t,dx,dz){const ox=t.x,oz=t.z;if(Math.abs(t.z+dz)>=rearDepth(t.z+dz)+57&&Math.abs(t.z+dz)>Math.abs(t.z))dz=0;
  if(SWAMPS.length&&inSwamp(t.x,t.z)){dx*=MAP===4?.1:.7;dz*=MAP===4?.1:.7}
  const lim=t.type==='ft'?1.25:1.6;   // 오를 수 있는 최대 장애물 높이(≈30~36° 경사). 이보다 높으면 못 넘음
  const ok=(x,z)=>{for(const c of cols)if(x>c.a-1.6&&x<c.b+1.6&&z>c.c-1.6&&z<c.e+1.6&&c.hi-t.y>lim&&c.lo<t.y+2.2)return false;return getTerrainElevation(x,z)-t.y<=lim};
- if(ok(t.x+dx,t.z))t.x+=dx;if(ok(t.x,t.z+dz))t.z+=dz;t.x=cl(t.x,-62,62);t.z=cl(t.z,-83,83);t.mv=Math.hypot(t.x-ox,t.z-oz);crush(t)}
+ if(ok(t.x+dx,t.z))t.x+=dx;if(ok(t.x,t.z+dz))t.z+=dz;t.x=cl(t.x,-62,62);t.z=clampWorldZ(t.z);t.mv=Math.hypot(t.x-ox,t.z-oz);crush(t)}
 function tankGround(t,x,z){let g=getTerrainElevation(x,z);const lim=t.type==='ft'?1.25:1.6;for(const c of cols)if(x>c.a-.6&&x<c.b+.6&&z>c.c-.6&&z<c.e+.6&&c.hi>g&&c.hi-t.y<=lim+.2&&c.lo<t.y+lim)g=c.hi;return g}
 function tankY(t,dt){const f=Math.sin(t.hull),h=Math.cos(t.hull),hl=t.len*.4,gf=tankGround(t,t.x+f*hl,t.z+h*hl),gr=tankGround(t,t.x-f*hl,t.z-h*hl),gc=tankGround(t,t.x,t.z);
  t.y+=(Math.max(gc,(gf+gr)/2)-t.y)*Math.min(1,dt*6);t.pitch+=(cl(Math.atan2(gf-gr,hl*2),-.6,.6)-t.pitch)*Math.min(1,dt*5)}
@@ -656,15 +695,15 @@ function crush(t){if(!t.alive||t.mv<.01)return;const f=Math.sin(t.hull),h=Math.c
  for(const e of ENT){if(!e.alive||e.tank||e.team===t.team||(e===P&&P.tank)||Math.abs(e.y-t.y)>1.6)continue;const dx=e.x-t.x,dz=e.z-t.z,al=dx*f+dz*h,la=dx*h-dz*f;
   if(Math.abs(al)<t.len/2+.4&&Math.abs(la)<t.wd/2+.45)hurt(e,999,t.drv?P:t,1)}}
 function syncTank(t){t.g.position.set(t.x,t.y,t.z);t.g.rotation.x=-(t.pitch||0);t.g.rotation.y=t.hull;t.turG.rotation.y=t.tur-t.hull}
-function tankFire(t,dir){if(t.cd>0)return;t.cd=3.2;startCannonReload(t);const o=new THREE.Vector3(t.x,t.y+2.1,t.z).addScaledVector(dir,t.len*.6);shoot(o,dir,t,110,o,220,6)}
+function tankFire(t,dir){if(t.cd>0)return;t.cd=t.reloadSeconds=t.railHunter?4.1:2.4;startCannonReload(t);const o=new THREE.Vector3(t.x,t.y+2.1,t.z).addScaledVector(dir,t.len*.6);shoot(o,dir,t,110,o,220,6)}
 function upTank(t,dt){if(!t.alive)return;t.cd=Math.max(0,t.cd-dt);t.sc-=dt;if(t.hv!==HQ[t.team].v){assign(t);t.hv=HQ[t.team].v}if(t.drv)return;
  if(t.sc<=0){t.sc=1;let best=null,bd=75;for(const e of ENT){if(!e.alive||e.team===t.team||(e===P&&P.tank))continue;const d=Math.hypot(e.x-t.x,e.z-t.z);if(d<bd&&vehicleSees(t,e)){bd=d;best=e}}t.tg=best}
- if(t.tg&&(!t.tg.alive||!vehicleSees(t,t.tg)))t.tg=null;let[gx,gz]=goal(t);if(Math.abs(gz)>54)gz=Math.sign(gz)*54;if(MAP===3){gx=(t.id%3-1)*20;gz=(t.team?1:-1)*36}const dg=Math.hypot(gx-t.x,gz-t.z),tu=TT[t.type].turret;let ang=Math.atan2(gx-t.x,gz-t.z),mv=dg>2;
+ if(t.tg&&(!t.tg.alive||!vehicleSees(t,t.tg)))t.tg=null;let[gx,gz]=goal(t);gz=clampWorldZ(gz,54);if(MAP===3){gx=(t.id%3-1)*20;gz=(t.team?1:-1)*36}const dg=Math.hypot(gx-t.x,gz-t.z),tu=TT[t.type].turret;let ang=Math.atan2(gx-t.x,gz-t.z),mv=dg>2;
  t.pt+=dt;if(t.pt>1){if(Math.hypot(t.x-t.px,t.z-t.pz)<.6&&dg>3){t.av=1.8;t.avd=Math.random()<.5?1.3:-1.3}t.px=t.x;t.pz=t.z;t.pt=0}if(t.av>0){t.av-=dt;ang+=t.avd}
  if(t.tg){const dx=t.tg.x-t.x,dz=t.tg.z-t.z,fa=Math.atan2(dx,dz);if(tu)t.tur=fa;else{const rel=Math.atan2(Math.sin(fa-t.hull),Math.cos(fa-t.hull));t.tur=t.hull+cl(rel,-.3,.3);if(Math.abs(rel)>.3){ang=fa;mv=false}}
   const ha=t.tur-fa;if(Math.abs(Math.atan2(Math.sin(ha),Math.cos(ha)))<.3&&t.cd<=0&&!attackRestricted(t.team,t.tg)){const o=new THREE.Vector3(t.x,t.y+2,t.z),d=ballisticAim(o,{x:t.tg.x,y:t.tg.y+1,z:t.tg.z},t,1);d.x+=R(-.03,.03);d.z+=R(-.03,.03);tankFire(t,d.normalize())}}
  else t.tur=t.hull;
- let da=ang-t.hull;da=Math.atan2(Math.sin(da),Math.cos(da));t.hull+=cl(da,-.9*dt,.9*dt);
+ let da=ang-t.hull;da=Math.atan2(Math.sin(da),Math.cos(da));t.hull+=cl(da,-.63*dt,.63*dt);
  if(mv&&Math.abs(da)<.9)moveTank(t,Math.sin(t.hull)*t.sp*dt,Math.cos(t.hull)*t.sp*dt);
  tankY(t,dt);syncTank(t)}
 function exitTank(dmg){const t=P.tank;if(!t)return;t.drv=false;P.tank=null;P.x=t.x+Math.cos(t.hull)*3;P.z=t.z-Math.sin(t.hull)*3;P.y=groundAt(P.x,P.z,t.y+1);P.hr2=.36;if(dmg)hurt(P,dmg,{team:-1})}
@@ -672,9 +711,9 @@ function killTank(t){t.g.traverse(o=>{if(o.isMesh)o.material=M(0x1c1c1c)});explo
 function buyTank(team,type,pl){if(OP_BOOT&&tickets[team]<=0)return;const c=TT[type],al=tanks.filter(k=>k.alive&&!k.playerOwned&&k.team===team);
  if(MAP!==2&&team===0&&al.some(k=>k.type===type)){if(pl)toast('이미 전장에 있는 차량입니다');return}if(al.length>=(MAP===2?10:team?3:2))return;
  if(PT[team]<c.cost){if(pl)toast('포인트 부족 ('+PT[team]+'/'+c.cost+')');return}
- PT[team]-=c.cost;let sx=0,zz=team?50:-50;out:for(const rz of[50,44,38]){for(let c=-48;c<=48;c+=12){const z0=team?rz:-rz;if(!blocked(c,z0,getTerrainElevation(c,z0),2.6)&&!inSwamp(c,z0)&&!tanks.some(k=>k.alive&&Math.hypot(k.x-c,k.z-z0)<6)&&!(MAP===3&&Math.abs(c)<32&&Math.abs(z0)<24)){sx=c;zz=z0;break out}}}mkTank(type,team,sx,zz);toast(team===MY?'✔ '+c.n+' 전차가 생성되었습니다!':'⚠ 적이 '+c.n+' 전차를 투입했다!')}
+ PT[team]-=c.cost;let sx=0,zz=rearZ(team?50:-50);out:for(const rz of[50,44,38]){for(let c=-48;c<=48;c+=12){const z0=rearZ(team?rz:-rz);if(!blocked(c,z0,getTerrainElevation(c,z0),2.6)&&!inSwamp(c,z0)&&!tanks.some(k=>k.alive&&Math.hypot(k.x-c,k.z-z0)<6)&&!(MAP===3&&Math.abs(c)<32&&Math.abs(z0)<24)){sx=c;zz=z0;break out}}}mkTank(type,team,sx,zz);toast(team===MY?'✔ '+c.n+' 전차가 생성되었습니다!':'⚠ 적이 '+c.n+' 전차를 투입했다!')}
 function updTankP(dt){const t=P.tank;P.cd-=dt;P.hr2=0;$('pr').textContent='';const tu=TT[t.type].turret;
- const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),r=(keys.KeyD?1:0)-(keys.KeyA?1:0);t.hull-=r*1.1*dt;
+ const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),r=(keys.KeyD?1:0)-(keys.KeyA?1:0);t.hull-=r*.77*dt;
  if(!tu){let rel=Math.atan2(Math.sin(yaw+Math.PI-t.hull),Math.cos(yaw+Math.PI-t.hull));rel=cl(rel,-.3,.3);yaw=t.hull+Math.PI+rel;pitch=cl(pitch,-.12,.3);t.tur=t.hull+rel}else t.tur=yaw+Math.PI;
  if(f)moveTank(t,Math.sin(t.hull)*f*t.sp*dt,Math.cos(t.hull)*f*t.sp*dt);
  tankY(t,dt);syncTank(t);P.x=t.x;P.z=t.z;P.y=t.y;bob+=Math.abs(f)*dt*6;
@@ -728,7 +767,7 @@ function flags(dt){for(const f of FL){let n=[0,0];for(const e of ENT)if(e.alive&
 /* ---------- 플레이어 ---------- */
 function lookDir(){return new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))}
 function reload(){const w=WP[cur];if(!w.magMax||P.rt>0||w.mag>=w.magMax||w.res<=0)return;P.rt=w.rt;P.rw=w;sfx.reload(w.id)}
-function pfire(){const w=WP[cur];if(!P.alive||P.cd>0)return;if(P.tank){const t=P.tank,a=t.tur,dd=new THREE.Vector3(Math.sin(a)*Math.cos(pitch),Math.sin(pitch),Math.cos(a)*Math.cos(pitch));P.cd=.3;if(t.cd<=0){const o=new THREE.Vector3(t.x,t.y+2.2,t.z).addScaledVector(dd,t.len*.6);t.cd=3.2;startCannonReload(t);shoot(o,dd,t,110,o,220,6,P);kick=.3;shake=Math.max(shake,.5)}return}if(cur===2){throwG();return}if(P.rt>0)return;if(w.mag<=0){sfx.click();P.cd=.3;if(w.res>0)reload();return}
+function pfire(){const w=WP[cur];if(!P.alive||P.cd>0)return;if(P.tank){const t=P.tank,a=t.tur,dd=new THREE.Vector3(Math.sin(a)*Math.cos(pitch),Math.sin(pitch),Math.cos(a)*Math.cos(pitch));P.cd=.3;if(t.cd<=0){const o=new THREE.Vector3(t.x,t.y+2.2,t.z).addScaledVector(dd,t.len*.6);t.cd=t.reloadSeconds=t.railHunter?4.1:2.4;startCannonReload(t);shoot(o,dd,t,110,o,220,6,P);kick=.3;shake=Math.max(shake,.5)}return}if(cur===2){throwG();return}if(P.rt>0)return;if(w.mag<=0){sfx.click();P.cd=.3;if(w.res>0)reload();return}
  w.mag--;P.cd=w.rate;kick=cur==0?.12:.04;bl+=ads?2:6;flash=.05;playWeaponShot(w.id,cam.position);
  // Use the rendered camera, including lean and recoil, as the sight reference.
  const d=cam.getWorldDirection(new THREE.Vector3());pitch+=R(0,.006);yaw+=R(-.003,.003);
@@ -864,15 +903,15 @@ function blocked(x,z,y,r=.4,height=1.76){if(getTerrainElevation(x,z)-y>.55)retur
 }
 function groundAt(x,z,y){let h=getTerrainElevation(x,z);for(const c of nearbyCols(x,z,.4))if(!(c.pushable&&RUBBLE.navProbe)&&x>c.a-.12&&x<c.b+.12&&z>c.c-.12&&z<c.e+.12&&c.hi<=y+.48&&c.hi>h)h=c.hi;return h}
 function move(e,dx,dz,r=.4){if(inSwamp(e.x,e.z)){const factor=(e.cavalry||e.horse)?.75:MAP===4?(e.tank?.1:.5):(e.tank?.7:.55);dx*=factor;dz*=factor}const height=bodyHeight(e);
-  if(!blocked(e.x+dx,e.z,e.y,r,height))e.x+=dx;if(!blocked(e.x,e.z+dz,e.y,r,height))e.z+=dz;e.x=cl(e.x,-62,62);e.z=cl(e.z,-83,83);
+  if(!blocked(e.x+dx,e.z,e.y,r,height))e.x+=dx;if(!blocked(e.x,e.z+dz,e.y,r,height))e.z+=dz;e.x=cl(e.x,-62,62);e.z=clampWorldZ(e.z);
 }
-function classifyTerrain(x,z,y){if(Math.abs(z)>=60)return'trench';if(MAP===3&&Math.abs(x)<29&&Math.abs(z)<21)return'fortress';if(inSwamp(x,z))return'swamp';
+function classifyTerrain(x,z,y){if(atBase(z))return'trench';if(MAP===3&&Math.abs(x)<29&&Math.abs(z)<21)return'fortress';if(inSwamp(x,z))return'swamp';
   const room=REG.find(g=>g.house&&Math.abs(x-g.x)<g.hx&&Math.abs(z-g.z)<g.hz);if(room)return'building';
   if(REG.some(g=>g.t==='forest'&&Math.hypot(x-g.x,z-g.z)<g.r))return'forest';if(getTerrainElevation(x,z)>HI+1.5)return'hill';return'open';
 }
 function labelSprite(text,color='#f1dfac',scale=4){const c=document.createElement('canvas');c.width=384;c.height=80;const ctx=c.getContext('2d');ctx.fillStyle='#141510dc';ctx.fillRect(0,0,384,80);ctx.strokeStyle=color;ctx.lineWidth=3;ctx.strokeRect(2,2,380,76);ctx.font='bold 26px sans-serif';ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,192,50);const tex=new THREE.CanvasTexture(c),s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthWrite:false}));s.scale.set(scale,scale*80/384,1);return s}
 function addOperationsRooms(){if(MAP>=4)return;for(const sg of[-1,1])for(const [i,x]of[-40,0,40].entries()){
-  const z=sg*80,name=['관측실','작전실','탄약실'][i];
+  const z=rearZ(sg*80),name=['관측실','작전실','탄약실'][i];
   addBox(10.4,.3,6.6,0x3f3930,x,3.1,z);addBox(.35,3,6.6,0x584631,x-5.1,0,z);addBox(.35,3,6.6,0x584631,x+5.1,0,z);
   addBox(10.2,3,.3,0x584631,x,0,z+sg*3.2);
   for(const dx of[-3.5,3.5])addBox(3.1,3,.3,0x584631,x+dx,0,z-sg*3.2);
@@ -920,9 +959,21 @@ function createFrontlineFlags(){if(createOperationFlags())return;
     if(!OP_BOOT&&MAP!==5){f.owner=z<-12?0:z>12?1:-1;f.p=f.owner===0?1:f.owner===1?-1:0}
     FL.push(f);
   });
-  for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'독':'연')+(i+1),(MAP===6?['마을 우물','마을 지휘소','마을 보급소']:MAP===4?['마을 관측소','마을 지휘소','마을 보급소']:['관측 참호','작전실','보급 참호'])[i],x,MAP>=4?HI:0,(team?1:-1)*79.5,4.5,'trench',team));
+  for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'독':'연')+(i+1),(MAP===6?['마을 우물','마을 지휘소','마을 보급소']:MAP===4?['마을 관측소','마을 지휘소','마을 보급소']:['관측 참호','작전실','보급 참호'])[i],x,MAP>=4?HI:0,rearZ((team?1:-1)*79.5),4.5,'trench',team));
 }
 
+// Fine rows on authored structures, widely spaced rows across the open approach.
+const navRows=[];
+for(let z=-82.5;z< -60;z+=1.5)navRows.push(rearZ(z));
+{const gap=rearDepth(-1),n=Math.ceil(gap/9);for(let i=0;i<n;i++)navRows.push(rearZ(-60)+gap*i/n)}
+for(let z=-60;z<=60;z+=1.5)navRows.push(z);
+{const n=Math.ceil(rearDepth(1)/9);for(let i=1;i<=n;i++)navRows.push(60+rearDepth(1)*i/n)}
+for(let z=61.5;z<=82.5;z+=1.5)navRows.push(rearZ(z));
+function navRow(z){
+  let lo=0,hi=navRows.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(navRows[mid]<z)lo=mid+1;else hi=mid}
+  return lo&&z-navRows[lo-1]<navRows[lo]-z?lo-1:lo;
+}
 const NAV={step:1.5,nodes:[],lookup:new Map(),flows:new Map(),upper:[]};const NAV_LEVELS=()=>MAP===3||MAP===6?2:1;const SINAI_HOUSES=[];
 const TERRAIN_CLASS={
   open:{name:'개활지',cost:1.35,range:42,stance:2},trench:{name:'참호',cost:.8,range:30,stance:1},
@@ -937,23 +988,25 @@ function boxRay(o,d,c,limit){let lo=0,hi=limit;
 }
 function worldHitDistance(o,d,limit){if(limit<=0)return 0;let nearest=limit;const tested=new Set(),horizontal=Math.hypot(d.x,d.z),stride=horizontal>.01?4/horizontal:limit;
   for(let t=0;t<=limit;t+=Math.min(stride,limit||1)){
-    const x=o.x+d.x*t,z=o.z+d.z*t;if(Math.abs(x)>68||Math.abs(z)>88)continue;
+    const x=o.x+d.x*t,z=o.z+d.z*t;if(Math.abs(x)>68||!inWorldZ(z,88))continue;
     for(const c of nearbyCols(x,z,.15))if(!tested.has(c)){tested.add(c);nearest=Math.min(nearest,boxRay(o,d,c,nearest))}
   }
-  if(Math.abs(d.y)>.0001||HILLS.length||sectorGround){let previous=0;for(let t=.6;t<nearest;t+=1.2){const x=o.x+d.x*t,z=o.z+d.z*t;if(Math.abs(x)<65&&Math.abs(z)<85&&o.y+d.y*t<getTerrainElevation(x,z)+.025){let a=previous,b=t;for(let j=0;j<5;j++){const m=(a+b)/2;if(o.y+d.y*m<getTerrainElevation(o.x+d.x*m,o.z+d.z*m)+.025)b=m;else a=m}nearest=b;break}previous=t}}
+  if(Math.abs(d.y)>.0001||HILLS.length||sectorGround){let previous=0;for(let t=.6;t<nearest;t+=1.2){const x=o.x+d.x*t,z=o.z+d.z*t;if(Math.abs(x)<65&&inWorldZ(z,85)&&o.y+d.y*t<getTerrainElevation(x,z)+.025){let a=previous,b=t;for(let j=0;j<5;j++){const m=(a+b)/2;if(o.y+d.y*m<getTerrainElevation(o.x+d.x*m,o.z+d.z*m)+.025)b=m;else a=m}nearest=b;break}previous=t}}
   return nearest;
 }
 function los(a,b){const d=new THREE.Vector3(b.x-a.x,b.y-a.y,b.z-a.z),len=d.length();if(len<.05)return true;d.multiplyScalar(1/len);return worldHitDistance(a,d,len)<len-.1?false:true}
 function navKey(ix,iz,l){return ix+','+iz+','+l}
 function upperSurface(x,z){for(const c of NAV.upper)if(x>c.a+.05&&x<c.b-.05&&z>c.c+.05&&z<c.e-.05)return c.hi;return null}
-function segmentWalkable(a,b){const d=Math.hypot(a.x-b.x,a.z-b.z),steps=Math.max(1,Math.ceil(d/.22));let y=a.y;
+function segmentWalkable(a,b){
+  if(Math.sign(a.z)===Math.sign(b.z)&&[a,b].every(p=>Math.abs(p.z)>68&&!atBase(p.z,54)))return Math.abs(a.y-b.y)<1.36;
+  const d=Math.hypot(a.x-b.x,a.z-b.z),steps=Math.max(1,Math.ceil(d/.22));let y=a.y;
   // Follow the actual stair treads; a straight height interpolation clips their risers.
   for(let i=1;i<=steps;i++){const k=i/steps,x=a.x+(b.x-a.x)*k,z=a.z+(b.z-a.z)*k,floor=groundAt(x,z,y);if(floor-y>.38||y-floor>1.36||blocked(x,z,floor,.28,1.65))return false;y=floor}return Math.abs(y-b.y)<.55;
 }
 function buildNavigation(){
   NAV.nodes=[];NAV.lookup.clear();NAV.flows.clear();NAV.upper=MAP===6?SINAI_HOUSES.map(h=>({a:h.x-4.3,b:h.x+4.3,c:h.z-3.8,e:h.z+3.8,hi:HI+3.8})):cols.filter(c=>Math.abs(c.hi-(FORT_UPPER))<.05&&c.hi-c.lo<.6);
-  for(let ix=0;ix<=82;ix++)for(let iz=0;iz<=110;iz++){
-    const x=-61.5+ix*NAV.step,z=-82.5+iz*NAV.step;
+  for(let ix=0;ix<=82;ix++)for(let iz=0;iz<navRows.length;iz++){
+    const x=-61.5+ix*NAV.step,z=navRows[iz];
     for(let level=0;level<NAV_LEVELS();level++){
       const y=level?upperSurface(x,z):getTerrainElevation(x,z);if(y===null||blocked(x,z,y,.28,1.65))continue;
       const node={id:NAV.nodes.length,ix,iz,level,x,y,z,edges:[],kind:classifyTerrain(x,z,y),mud:inSwamp(x,z)};NAV.lookup.set(navKey(ix,iz,level),node.id);NAV.nodes.push(node);
@@ -966,7 +1019,7 @@ function buildNavigation(){
     n.edges.push([j,cost]);
   }
 }
-function nearestNav(x,y,z,rings=4){const ix=Math.round((x+61.5)/NAV.step),iz=Math.round((z+82.5)/NAV.step);let best=-1,dist=Infinity;
+function nearestNav(x,y,z,rings=4){const ix=Math.round((x+61.5)/NAV.step),iz=navRow(z);let best=-1,dist=Infinity;
   for(let r=0;r<=rings;r++){for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){if(r&&Math.abs(dx)!==r&&Math.abs(dz)!==r)continue;for(let l=0;l<NAV_LEVELS();l++){
     const id=NAV.lookup.get(navKey(ix+dx,iz+dz,l));if(id===undefined)continue;const n=NAV.nodes[id];if(n.disabled)continue;const dy=Math.abs(n.y-y);if(dy>1.5)continue;
     const d=(n.x-x)**2+(n.z-z)**2+dy*dy*3;if(d<dist){best=id;dist=d}
@@ -998,7 +1051,7 @@ function buildFiringSteps(){
   for(const sg of [-1,1])for(const x of [-54,-42,-36,-18,-6,6,18,36,42,54]){
     let front=60;while(front<76&&![-1.25,0,1.25].every(dx=>trenchGridOpen(x+dx,sg*(front+.1))))front+=.25;
     if(![-1.25,0,1.25].every(dx=>trenchGridOpen(x+dx,sg*(front+3.45))))continue;
-    const p={x,front:front+.04,width:2.7,sg};FIRING_STEPS.push(p);
+    const p={x,front:rearDepth(sg)+front+.04,width:2.7,sg};FIRING_STEPS.push(p);
     addBox(p.width,1.25,1.1,0x85704c,x,0,sg*(p.front+.55));
     for(let i=0;i<4;i++)addBox(p.width,1-i*.25,.6,0x78603e,x,0,sg*(p.front+1.4+i*.6));
     for(let i=0;i<5;i++)addBox(p.width,.035,.08,0xb6a078,x,[1.25,1,.75,.5,.25][i],sg*(p.front+(i===0?.7:1.4+(i-1)*.6)),false);
@@ -1013,10 +1066,6 @@ function defensePostFor(b){
   const mates=B.filter(e=>e.team===b.team),index=Math.max(0,mates.indexOf(b)),slot=V2.phase==='final'?Math.floor(index*posts.length/V2.finalCounts[b.team]):index;return posts[slot%posts.length];
 }
 function attackAssemblyPositions(attacker,defender){
-  if(MAP===3){// Verdun: the final assault starts from the attacker's own trench, not from the fortress.
-    const sg=defender?1:-1,flags=TRENCH_FLAGS.filter(f=>f.home===attacker),nodes=NAV.nodes.filter(n=>!n.disabled&&n.level===0&&n.y<1&&Math.abs(n.x)<=60&&n.z*sg<=-62&&n.z*sg>=-80&&!blocked(n.x,n.z,n.y,.3,1.76));
-    if(nodes.length){nodes.sort((a,c)=>a.id-c.id);const gcd=(a,c)=>c?gcd(c,a%c):a;let stride=37;while(gcd(stride,nodes.length)!==1)stride++;return {flags,nodes,stride}}
-  }
   const sg=defender?1:-1,owned=FL.filter(f=>f.owner===attacker&&f.z*sg<=27),available=owned.length?owned:FL.filter(f=>f.z*sg<=27);
   const flags=[...available].sort((a,b)=>b.z*sg-a.z*sg).slice(0,3);
   const routes=MAP===5&&RAIL.finalMode==='base'?activeFlags().map(flowFor):[];
@@ -1047,7 +1096,7 @@ function planHeadquarters(team,force=false){
   const h=HQ[team],allies=B.filter(b=>b.alive&&b.team===team),enemies=knownEnemies(team).filter(e=>!e.tank),ratio=strength(team)/Math.max(1,strength(1-team));
   const intel=FL.map(f=>({f,enemy:enemies.filter(e=>Math.hypot(e.x-f.x,e.z-f.z)<f.r+12&&Math.abs(e.y-f.y)<2).length,friendly:allies.filter(e=>Math.hypot(e.x-f.x,e.z-f.z)<f.r+12).length}));
   const threats=intel.filter(q=>q.f.owner===team&&q.enemy>q.friendly+1),hostile=intel.filter(q=>q.f.owner!==team),signature=FL.map(f=>f.owner).join(',')+'/'+h.mode;
-  const center=allies.length?allies.reduce((a,b)=>({x:a.x+b.x/allies.length,z:a.z+b.z/allies.length}),{x:0,z:0}):{x:0,z:team?70:-70};
+  const center=allies.length?allies.reduce((a,b)=>({x:a.x+b.x/allies.length,z:a.z+b.z/allies.length}),{x:0,z:0}):{x:0,z:rearZ(team?70:-70)};
   const score=q=>Math.hypot(q.f.x-center.x,q.f.z-center.z)+q.enemy*2.3-q.friendly*.5-(q.f.owner===1-team?8:0);
   const ranked=[...(hostile.length?hostile:intel)].sort((a,b)=>score(a)-score(b)),primary=ranked[0].f;
   let type,label,targets;
@@ -1144,7 +1193,7 @@ function soldierRig(team,elite,type,nation=pickUniformNation(team)){const g=new 
 }
 function spawn(e){
   e.spawnSerial=(e.spawnSerial||0)+1;if(e.ow)releaseOverwatch(e);if(e.psq)releaseSquad(e);e.reconOrder=null;e.railCover=null;e.navVault=null;e.retaliation=null;e.noticeTarget=null;e.awareness=0;e.perception='unaware';e.lastTarget=null;e.lastSeen=null;e.visionScanAt=null;
-  const x=R(-54,54),sg=e.team?1:-1;e.x=x;e.z=sg*trenchAxis(x);e.y=MAP>=4?getTerrainElevation(e.x,e.z):0;e.hp=e.elite?170:100;e.maxhp=e.hp;e.alive=true;e.rs=0;e.hv=-1;e.stance=0;e.hc=1.05;e.hr2=.3;e.sc=R(0,.6);e.tg=null;e.cover=null;e.navClock=0;e.suppression=0;e.ammo=botGunSpec(e).mag;e.reloadLeft=0;e.reloadCover=null;e.burst=0;e.once=V2.phase==='final';if(e.g)e.g.visible=true;
+  const x=R(-54,54),sg=e.team?1:-1;e.x=x;e.z=rearZ(sg*trenchAxis(x));e.y=MAP>=4?getTerrainElevation(e.x,e.z):0;e.hp=e.elite?170:100;e.maxhp=e.hp;e.alive=true;e.rs=0;e.hv=-1;e.stance=0;e.hc=1.05;e.hr2=.3;e.sc=R(0,.6);e.tg=null;e.cover=null;e.navClock=0;e.suppression=0;e.ammo=botGunSpec(e).mag;e.reloadLeft=0;e.reloadCover=null;e.burst=0;e.once=V2.phase==='final';if(e.g)e.g.visible=true;
   const id=nearestNav(e.x,e.y,e.z,5);if(id>=0){const n=NAV.nodes[id];e.x=n.x;e.y=n.y;e.z=n.z}
 }
 function mkBot(t,elite,type='rifle'){
@@ -1315,12 +1364,12 @@ function beginFinalBattle(data){
   for(const team of[0,1]){
     const total=V2.finalCounts[team],count=total-(team===MY?1:0),machineGunners=FINAL_DEFENDERS/2-(team===MY?1:0);
     for(let i=0;i<count;i++){const defending=team===data.defender,b=mkBot(team,defending,defending?(i<machineGunners?'hmg':'rifle'):i%8===0?'lmg':'rifle');b.once=true;
-      if(defending){b.post=defensePostFor(b);if(b.post){b.x=b.post.x;b.y=b.post.y;b.z=b.post.z}else placeOnNavigation(b,0,0,sg*72)}else placeFinalAttacker(b,i+(team===MY?1:0),assembly);
+      if(defending){b.post=defensePostFor(b);if(b.post){b.x=b.post.x;b.y=b.post.y;b.z=b.post.z}else placeOnNavigation(b,0,0,rearZ(sg*72))}else placeFinalAttacker(b,i+(team===MY?1:0),assembly);
       b.objective=objectiveFor(b);b.navClock=0;b.cd=R(1.5,3);b.gcd=R(10,18);b.yaw=defending?(sg>0?Math.PI:0):(sg>0?0:Math.PI);
     }
   }
   P.alive=true;P.maxhp=MY===data.defender?170:100;P.hp=P.maxhp;P.stance=0;P.crouch=false;P.vault=null;P.dt=0;P.vy=0;P.horse=null;P.tank=null;P.hr2=.3;P.hc=1.1;P.cd=0;P.rt=0;P.eye=1.65;
-  if(MY===data.defender){const posts=DEFENSE_POSTS.filter(p=>p.home===MY),post=posts[posts.length-1];if(post){P.x=post.x;P.y=post.y;P.z=post.z}else placeOnNavigation(P,0,0,sg*72)}else placeFinalAttacker(P,0,assembly);
+  if(MY===data.defender){const posts=DEFENSE_POSTS.filter(p=>p.home===MY),post=posts[posts.length-1];if(post){P.x=post.x;P.y=post.y;P.z=post.z}else placeOnNavigation(P,0,0,rearZ(sg*72))}else placeFinalAttacker(P,0,assembly);
   yaw=MY===data.defender?(sg>0?0:Math.PI):(sg>0?Math.PI:0);pitch=0;resetWeapons();WP[2]=wFrom(MY?'stiel':'mills');if(MY===data.defender){WP[3]=wFrom(DEF[3][MY]);setWeapon(3)}else setWeapon(0);buildSlots();
   HQ[0].v++;HQ[1].v++;hqThink(0);hqThink(1);rebuildActors();updateFlagEligibility();drawMap();
   toast('최후의 '+(MY===data.attacker?'돌격':'방어')+' · '+data.count+' 대 '+FINAL_DEFENDERS+' · '+(MAP===3?'아군 참호':V2.assembly.join('·')+' 거점')+'에서 진격');$('phase-banner').textContent='최후의 '+(MY===data.attacker?'돌격':'방어')+' · 방어 거점 3곳 · 부활 없음';
@@ -1374,7 +1423,7 @@ function updatePlayerLean(dt){
   let fraction=1;if(length>.001){const dir=new THREE.Vector3(x,y,z).divideScalar(length),hit=worldHitDistance(origin,dir,length+.15);fraction=cl((hit-.14)/length,0,1)}
   P.leanX=x*fraction;P.leanZ=z*fraction;P.leanView=P.lean*fraction;cam.position.x+=P.leanX;cam.position.y+=y*fraction;cam.position.z+=P.leanZ;roll-=P.leanView*.17;
 }
-function respawnP(){if(V2.phase==='final')return;P.x=R(-52,52);P.z=(MY?1:-1)*trenchAxis(P.x);P.y=MAP>=4?getTerrainElevation(P.x,P.z):0;placeOnNavigation(P,P.x,P.y,P.z);P.maxhp=100;P.hp=100;P.alive=true;P.vy=0;P.horse=null;P.tank=null;P.stance=0;P.crouch=false;P.vault=null;P.vaultCooldown=0;ads=false;mouseL=false;kick=flash=shake=roll=pOff=0;P.cd=0;P.hr2=.3;P.hc=1.1;P.eye=1.65;bl=8;yaw=MY?0:Math.PI;pitch=0;resetWeapons();cam.position.set(P.x,P.y+P.eye,P.z)}
+function respawnP(){if(V2.phase==='final')return;P.x=R(-52,52);P.z=rearZ((MY?1:-1)*trenchAxis(P.x));P.y=MAP>=4?getTerrainElevation(P.x,P.z):0;placeOnNavigation(P,P.x,P.y,P.z);P.maxhp=100;P.hp=100;P.alive=true;P.vy=0;P.horse=null;P.tank=null;P.stance=0;P.crouch=false;P.vault=null;P.vaultCooldown=0;ads=false;mouseL=false;kick=flash=shake=roll=pOff=0;P.cd=0;P.hr2=.3;P.hc=1.1;P.eye=1.65;bl=8;yaw=MY?0:Math.PI;pitch=0;resetWeapons();cam.position.set(P.x,P.y+P.eye,P.z)}
 function updP(dt){
   if(!P.alive){if(V2.phase==='normal'){P.dt-=dt;if(P.dt<=0)respawnP()}else{
     updateSpectator();
@@ -1676,7 +1725,7 @@ function clearBulletEffects(){while(BALLISTICS.live.length)BALLISTICS.pool.push(
 function updateBulletEffects(){if(!BULLET_FX.batch)return;const{head,core,glow,dummy}=BULLET_FX.batch;let n=0;for(const p of BALLISTICS.live){const dir=p.velocity.clone().normalize(),r=p.boom?.13:.014,len=Math.min(p.distance,p.boom?4:1.65);dummy.position.copy(p.position);dummy.lookAt(p.position.x+dir.x,p.position.y+dir.y,p.position.z+dir.z);dummy.scale.set(r,r,r*2.5);dummy.updateMatrix();head.setMatrixAt(n,dummy.matrix);dummy.position.addScaledVector(dir,-len/2);dummy.scale.set(r*.8,r*.8,len);dummy.updateMatrix();core.setMatrixAt(n,dummy.matrix);const halo=p.boom?3.8:2.1;dummy.scale.set(r*halo,r*halo,len);dummy.updateMatrix();glow.setMatrixAt(n,dummy.matrix);n++}for(const m of[head,core,glow]){m.count=n;m.instanceMatrix.needsUpdate=true}}
 
 function mapHeading(w,h,angle=yaw){
-  const span=tacticalExtent(w),s=MY?1:-1,x=-Math.sin(angle)*s*w/span.x,y=-Math.cos(angle)*s*h/span.z,length=Math.hypot(x,y);
+  const span=tacticalExtent(w),s=MY?1:-1,x=-Math.sin(angle)*s*w/span.x,y=(chartDepth(P.z-Math.cos(angle)*.01)-chartDepth(P.z))*100*s*h/span.z,length=Math.hypot(x,y);
   return {x:x/length,y:y/length};
 }
 function playerRouteTarget(){
@@ -1783,18 +1832,24 @@ function updateAmbient(dt,run){setAmbientRunning(run);if(!run||!AMBIENT.enabled)
 }
 function syncAmbientUI(){document.querySelectorAll('[data-ambient-toggle]').forEach(b=>{b.textContent=AMBIENT.enabled?'환경음 끄기 [L]':'환경음 켜기 [L]';b.setAttribute('aria-pressed',String(AMBIENT.enabled))})}
 function toggleAmbient(){AMBIENT.enabled=!AMBIENT.enabled;try{localStorage.setItem('1918-ambient',AMBIENT.enabled?'on':'off')}catch(e){}setAmbientRunning(isPlaying());syncAmbientUI()}
-function tacticalExtent(w){return w>200&&MAP===3&&SUPPORT.zoom?{x:64,z:48,cx:0,cz:0}:{x:130,z:170,cx:0,cz:0}}
+function chartDepth(z,inverse=false){
+  const gap=rearDepth(z),depth=Math.abs(z)-60;
+  if(!gap||depth<=0)return z;
+  const band=32,inside=inverse?band:gap,outside=inverse?gap:band;
+  return Math.sign(z)*(60+(depth<=inside?depth*outside/inside:outside+depth-inside));
+}
+function tacticalExtent(w){return w>200&&MAP===3&&SUPPORT.zoom?{x:64,z:48,cx:0,cz:0}:{x:130,z:chartDepth(rearZ(85))-chartDepth(rearZ(-85)),cx:0,cz:0}}
 // A top-down camera looking toward each team's advance: rotate BOTH axes.
 // Team 0 faces +Z, so its screen-right is -X. Team 1 faces -Z, right is +X.
-function mapPoint(x,z,w,h){const span=tacticalExtent(w),s=MY?1:-1;return[w/2+s*(x-span.cx)/span.x*w,h/2+s*(z-span.cz)/span.z*h]}
-function canvasToWorld(canvas,event){const r=canvas.getBoundingClientRect(),span=tacticalExtent(canvas.width),s=MY?1:-1;return{x:span.cx+s*((event.clientX-r.left)/r.width-.5)*span.x,z:span.cz+s*((event.clientY-r.top)/r.height-.5)*span.z}}
+function mapPoint(x,z,w,h){const span=tacticalExtent(w),s=MY?1:-1;return[w/2+s*(x-span.cx)/span.x*w,h/2+s*(chartDepth(z)-span.cz)/span.z*h]}
+function canvasToWorld(canvas,event){const r=canvas.getBoundingClientRect(),span=tacticalExtent(canvas.width),s=MY?1:-1;return{x:span.cx+s*((event.clientX-r.left)/r.width-.5)*span.x,z:chartDepth(span.cz+s*((event.clientY-r.top)/r.height-.5)*span.z,true)}}
 function drawTacticalMap(ctx,w,h,floor=0,large=false){ctx.clearRect(0,0,w,h);ctx.fillStyle=MAP===2?'#526449':MAP===6?'#9c8456':'#514b3d';ctx.fillRect(0,0,w,h);
   const span=tacticalExtent(w);
   const rect=(a,b,c,d,color)=>{const p=mapPoint(a,d,w,h),q=mapPoint(b,c,w,h);ctx.fillStyle=color;ctx.fillRect(p[0],p[1],q[0]-p[0],q[1]-p[1])};
   if(MAP===4){rect(-65,65,-14.5,14.5,'#477f94');for(const x of[-42,0,42])rect(x-3.5,x+3.5,-20,20,'#b19c73')}
-  rect(-65,65,-85,-60,'#332d23');rect(-65,65,60,85,'#332d23');
+  rect(-65,65,rearZ(-85),rearZ(-60),'#332d23');rect(-65,65,rearZ(60),rearZ(85),'#332d23');
   for(const g of REG){if(!['forest','mountain','swamp'].includes(g.t))continue;const p=mapPoint(g.x,g.z,w,h);ctx.fillStyle={forest:'#263e2c',mountain:'#7c7352',swamp:MAP===4?'#715336':'#2b5e59'}[g.t];ctx.beginPath();ctx.ellipse(p[0],p[1],g.r*w/span.x,g.r*h/span.z,0,0,Math.PI*2);ctx.fill()}
-  if(MAP<4)for(const sg of[-1,1]){ctx.strokeStyle='#b19b72';ctx.lineWidth=5*w/span.x;ctx.beginPath();for(let x=-61;x<=61;x+=2){const p=mapPoint(x,sg*trenchAxis(x),w,h);x===-61?ctx.moveTo(...p):ctx.lineTo(...p)}ctx.stroke();for(const x of STAIRS){const a=mapPoint(x,sg*60,w,h),b=mapPoint(x,sg*trenchAxis(x),w,h);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke()}}
+  if(MAP<4)for(const sg of[-1,1]){ctx.strokeStyle='#b19b72';ctx.lineWidth=5*w/span.x;ctx.beginPath();for(let x=-61;x<=61;x+=2){const p=mapPoint(x,rearZ(sg*trenchAxis(x)),w,h);x===-61?ctx.moveTo(...p):ctx.lineTo(...p)}ctx.stroke();for(const x of STAIRS){const a=mapPoint(x,rearZ(sg*60),w,h),b=mapPoint(x,rearZ(sg*trenchAxis(x)),w,h);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke()}}
   else for(const v of TANNENBERG.villages){rect(v.x-6,v.x+6,v.z-5,v.z+5,'#b2a283');rect(v.x-1.7,v.x+1.7,v.z-4,v.z+4,'#6b6251')}
   if(MAP===3){rect(-28,28,-20,20,'#3c4443');if(floor===2)rect(-24,24,-12,14,'#4a5553')}
   for(const c of cols){if(c.hi-c.lo<.5||c.hi<.6||(c.hi-c.lo<=1.2&&c.b-c.a>6&&c.e-c.c>6))continue;if(MAP===3&&Math.abs((c.a+c.b)/2)<29&&Math.abs((c.c+c.e)/2)<21){const base=floor===2?FORT_UPPER:HI;if(c.lo>base+1.4||c.hi<=base+.05)continue}if(Math.abs((c.c+c.e)/2)>60)continue;rect(c.a,c.b,c.c,c.e,'#a5a08b')}
@@ -1829,10 +1884,10 @@ function openSupport(){if(!P.alive||over)return;V2.overlay='support';V2.lockToke
 function closeSupport(resume){V2.overlay=null;$('support-ui').classList.add('hid');if(resume)requestBattleLock();else pauseBattle()}
 function refreshSupport(){if(V2.overlay!=='support')return;const canvas=$('support-map'),zoom=MAP===3&&SUPPORT.zoom,w=zoom?720:520,h=zoom?600:680;if(canvas.width!==w){canvas.width=w;canvas.height=h}canvas.classList.toggle('fort-zoom',!!zoom);drawTacticalMap(canvas.getContext('2d'),canvas.width,canvas.height,SUPPORT.floor,true);$('support-cost').textContent='보유 '+PP+'P · 지원 '+SUPPORT.cost+'P · '+(SUPPORT.left>0?'재지원 '+Math.ceil(SUPPORT.left)+'초':'지원 가능');$('support-floors').style.display=MAP===3?'flex':'none';$('support-zoom').textContent=zoom?'전장 전체':'요새 확대';document.querySelectorAll('[data-floor]').forEach(b=>b.classList.toggle('selected',Number(b.dataset.floor)===SUPPORT.floor))}
 function impactHeight(x,z){let y=getTerrainElevation(x,z);for(const c of nearbyCols(x,z,.1))if(x>=c.a&&x<=c.b&&z>=c.c&&z<=c.e)y=Math.max(y,c.hi);return y+.1}
-function requestArtillery(x,z){if(!P.alive||over||V2.overlay!=='support'||Math.abs(x)>62||Math.abs(z)>83)return false;
+function requestArtillery(x,z){if(!P.alive||over||V2.overlay!=='support'||Math.abs(x)>62||!inWorldZ(z))return false;
   if(PP<SUPPORT.cost){$('support-feedback').textContent='개인 포인트가 부족합니다.';return false}if(SUPPORT.left>0){$('support-feedback').textContent='포병이 재장전 중입니다.';return false}
   PP-=SUPPORT.cost;SUPPORT.left=SUPPORT.cooldown;
-  for(let i=0;i<9;i++){const angle=R(0,6.28),distance=i===0?0:R(2,10),px=cl(x+Math.cos(angle)*distance,-62,62),pz=cl(z+Math.sin(angle)*distance,-83,83);SUPPORT.shells.push({t:2.5+i*.4,x:px,z:pz,team:MY,credit:P})}
+  for(let i=0;i<9;i++){const angle=R(0,6.28),distance=i===0?0:R(2,10),px=cl(x+Math.cos(angle)*distance,-62,62),pz=clampWorldZ(z+Math.sin(angle)*distance);SUPPORT.shells.push({t:2.5+i*.4,x:px,z:pz,team:MY,credit:P})}
   closeSupport(true);toast('포병지원 요청 · 9발 · -'+SUPPORT.cost+'P');return true;
 }
 function updateSupport(dt){SUPPORT.left=Math.max(0,SUPPORT.left-dt);for(let i=SUPPORT.shells.length-1;i>=0;i--){const shell=SUPPORT.shells[i];shell.t-=dt;if(shell.t<=0){SUPPORT.shells.splice(i,1);const p=new THREE.Vector3(shell.x,impactHeight(shell.x,shell.z),shell.z);explode(p,10,180,{team:shell.team},shell.credit)}}}
@@ -1887,7 +1942,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
 function initFrontlineV2(){
   FC[MY]=0x63b8df;FC[1-MY]=0xd4715d;
   if(MAP===3&&STORY_MAP!==7){const sky=scene.children.find(o=>o.isHemisphereLight);if(sky){sky.intensity=.62;sky.color.setHex(0x8299b6);sky.groundColor.setHex(0x414639)}sun.intensity=.22;sun.color.setHex(0xb6c6dc)}
-  if(OP_OUTER){prepareOperationOuter();buildFiringSteps()}else{addOperationsRooms();buildFiringSteps();expandFortress();prepareTannenberg();prepareSinai();prepareRailWorld();buildMainLandscape()}initDestruction();scene.updateMatrixWorld(true);rebuildWorldGrid();V2.navReady=true;createFrontlineFlags();
+  if(OP_OUTER){prepareOperationOuter();buildFiringSteps()}else{addOperationsRooms();buildFiringSteps();expandFortress();prepareTannenberg();prepareSinai();prepareRailWorld();buildMainLandscape()}buildApproachGround();initDestruction();scene.updateMatrixWorld(true);rebuildWorldGrid();V2.navReady=true;createFrontlineFlags();
   if(MAP!==5){
     for(const [index,flag] of FL.entries()){
       let count=0;
@@ -1906,10 +1961,10 @@ function initFrontlineV2(){
   buildNavigation();
   initSoldierBatches();particleBatch=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:0xffffff}),600);particleBatch.instanceMatrix.setUsage(THREE.DynamicDrawUsage);particleBatch.setColorAt(0,new THREE.Color(0xffffff));particleBatch.instanceColor.setUsage(THREE.DynamicDrawUsage);particleBatch.frustumCulled=false;particleBatch.count=0;scene.add(particleBatch);
   for(let i=0;i<initialInfantryCount(1);i++)mkBot(1,i<(MAP===6?4:6),i<(MAP===6?4:6)?'rifle':i<(MAP===6?6:12)?'lmg':i<(MAP===6?7:15)?'hmg':'rifle');for(let i=0;i<initialInfantryCount(0);i++)mkBot(0,false,i<2?'lmg':i===2?'hmg':'rifle');
-  for(let i=0;i<8;i++){const x=-48+i*13,z=(i%2?1:-1)*trenchAxis(x);mkHorse(x,z)}
-  for(const a of ammoBoxes){if(Math.abs(a.position.z)>60){a.position.z=Math.sign(a.position.z)*trenchAxis(a.position.x);a.position.y=.25}else a.position.y=getTerrainElevation(a.position.x,a.position.z)+.25}
+  for(let i=0;i<8;i++){const x=-48+i*13,z=rearZ((i%2?1:-1)*trenchAxis(x));mkHorse(x,z)}
+  for(const a of ammoBoxes){if(Math.abs(a.position.z)>60){a.position.z=rearZ(Math.sign(a.position.z)*trenchAxis(a.position.x));a.position.y=getTerrainElevation(a.position.x,a.position.z)+.25}else a.position.y=getTerrainElevation(a.position.x,a.position.z)+.25}
   batchStaticWorld();initBulletEffects();initAtmosphere();bindBattleInput();bindSupportUI();hqT=8;hqThink(0);hqThink(1);rebuildActors();updateFlagEligibility();updateCaptureHUD();drawMap();buyUI();
-  P.stance=0;P.maxhp=100;P.vaultCooldown=0;cam.position.set(0,1.65,-70);yaw=Math.PI;setWeapon(0);$('go').disabled=false;$('go').textContent='전투 시작';
+  P.stance=0;P.maxhp=100;P.vaultCooldown=0;cam.position.set(0,1.65,rearZ(-70));yaw=Math.PI;setWeapon(0);$('go').disabled=false;$('go').textContent='전투 시작';
 }
 
 // Compact vehicle and supply extension; existing combat, sounds and steering are reused.
@@ -1927,7 +1982,7 @@ function updateAutoTurrets(t,dt){if(t?.disabled){for(const q of t.autoTurrets||[
   if(!q.target?.alive){q.target=null;q.aim=null;continue}const a=combatAimPoint(q.target);if(!turretArcAllows(t,q,a)||!vehicleSees(t,q.target,90,t.hull+q.g.rotation.y,o)){q.target=null;q.aim=null;continue}const dir=ballisticAim(o,a,{autoTurret:true});q.g.rotation.y=Math.atan2(dir.x,dir.z)-t.hull;q.g.rotation.x=-Math.asin(cl(dir.y,-1,1));q.aim=new THREE.Vector3(a.x,a.y,a.z);
   if(q.cd<=0&&los(o,a)){q.cd=.32;const miss=Math.random()<.5,spread=miss?.09:.012;dir.x+=R(-spread,spread);dir.y+=R(-spread,spread);dir.z+=R(-spread,spread);shoot(o,dir.normalize(),{team:t.team,tank:true,autoTurret:true,host:t},23,o,95,0,t.playerOwned?P:t);playAuxiliaryShot(t,o);if(--q.ammo<=0)q.reload=3.8}
 }}
-function configureHeavy(t,type){t.special=type;t.type=type;t.sp=TT[type].sp;t.hp=t.maxhp=TT[type].hp;t.cd=0;t.reloadSeconds=15;t.playerOwned=true;t.len=type==='fcm'?10:11;t.wd=type==='fcm'?3.4:10;
+function configureHeavy(t,type){t.special=type;t.type=type;t.sp=TT[type].sp;t.hp=t.maxhp=TT[type].hp;t.cd=0;t.reloadSeconds=11;t.playerOwned=true;t.len=type==='fcm'?10:11;t.wd=type==='fcm'?3.4:10;
   for(const c of [...t.g.children])t.g.remove(c);t.turG=new THREE.Group();t.g.add(t.turG);t.extraGuns=[];
   if(type==='mk1'){
     t.len=7.6;t.wd=4.3;t.hc=1.5;t.hr2=8;
@@ -1953,10 +2008,12 @@ function configureHeavy(t,type){t.special=type;t.type=type;t.sp=TT[type].sp;t.hp
     addAutoTurret(t,0,5.5,1);t.hc=4.2;t.hr2=20;
   }syncTank(t);return t;
 }
-function fireHeavy(t,dir){if(t.cd>0||!t.alive)return false;t.cd=15;t.reloadSeconds=15;startCannonReload(t);const target=new THREE.Vector3(t.x,t.y+(t.special==='tsar'?4.9:3.3),t.z).addScaledVector(dir,220);
-  for(const gun of[t.turG,...t.extraGuns]){const o=gunWorld(t,gun);const d=target.clone().sub(o).normalize();shoot(o,d,t,t.special==='fcm'?700:420,o,260,t.special==='fcm'?13:10,P)}kick=.4;shake=.8;return true;
+function heavyAimTarget(t,dir){return new THREE.Vector3(t.x,t.y+(t.special==='tsar'?4.9:3.3),t.z).addScaledVector(dir,220)}
+function heavyMuzzle(t,gun){gun.updateWorldMatrix(true,false);return t.special==='mk1'?gun.localToWorld(new THREE.Vector3(0,.14,2.14)):gunWorld(t,gun)}
+function fireHeavy(t,dir){if(t.cd>0||!t.alive)return false;t.cd=t.reloadSeconds=11;startCannonReload(t);const target=heavyAimTarget(t,dir);
+  for(const gun of[t.turG,...t.extraGuns]){const o=heavyMuzzle(t,gun);const d=target.clone().sub(o).normalize();shoot(o,d,t,t.special==='fcm'?700:420,o,260,t.special==='fcm'?13:10,P)}kick=.4;shake=.8;return true;
 }
-function vehicleSpawnSite(){const sg=MY?1:-1;for(const z of[48,40,32])for(const x of[-48,-32,32,48]){const y=getTerrainElevation(x,sg*z);if(!blocked(x,sg*z,y,6,8)&&!tanks.some(t=>t.alive&&Math.hypot(t.x-x,t.z-sg*z)<13))return{x,z:sg*z}}return null}
+function vehicleSpawnSite(){const sg=MY?1:-1;for(const z of[48,40,32].map(v=>v+rearDepth(sg)))for(const x of[-48,-32,32,48]){const y=getTerrainElevation(x,sg*z);if(!blocked(x,sg*z,y,6,8)&&!tanks.some(t=>t.alive&&Math.hypot(t.x-x,t.z-sg*z)<13))return{x,z:sg*z}}return null}
 function buyPlayerVehicle(type){
   if(!P.alive||V2.phase!=='normal'){toast('탈것은 일반전에서 생성할 수 있습니다');return false}
   if(EXP.vehicle?.alive){toast('플레이어 탈것은 동시에 1대만 보유할 수 있습니다');return false}
@@ -1977,18 +2034,18 @@ function createAirship(x,z){const t=mkTank('ft',MY,x,z);for(const c of [...t.g.c
 function shipPosition(t,x,z,y=0){return{x:t.x+Math.cos(t.hull)*x+Math.sin(t.hull)*z,y:t.y+y,z:t.z-Math.sin(t.hull)*x+Math.cos(t.hull)*z}}
 function updateAirship(t,dt){if(!t.alive)return;const driving=P.airship===t&&P.piloting;
   if(driving){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0);if(f)t.throttle=f;t.hull-=((keys.KeyD?1:0)-(keys.KeyA?1:0))*.5*dt;t.y=cl(t.y+((keys.Space?1:0)-(keys.ControlLeft?1:0))*4*dt,12,32)}
-  t.x=cl(t.x+Math.sin(t.hull)*t.throttle*t.sp*dt,-48,48);t.z=cl(t.z+Math.cos(t.hull)*t.throttle*t.sp*dt,-50,50);syncTank(t);
+  t.x=cl(t.x+Math.sin(t.hull)*t.throttle*t.sp*dt,-48,48);t.z=clampWorldZ(t.z+Math.cos(t.hull)*t.throttle*t.sp*dt,50);syncTank(t);
   for(const b of t.crew)if(b.alive){Object.assign(b,shipPosition(t,b.crewPos.x,b.crewPos.z));b.yaw=t.hull;b.tg=t.autoTurrets.find(q=>q.crew===b)?.target||null;b.velocity=0}
   updateAutoTurrets(t,dt);
 }
 function boardAirship(t){P.airship=t;P.piloting=false;P.deckX=0;P.deckZ=-5.5;P.stance=0;P.vy=0;P.tank=null;P.horse=null;yaw=t.hull+Math.PI;pitch=0;Object.assign(P,shipPosition(t,0,-5.5));msg('승선 · 앞쪽 운전석 E · 후방 개방구에서 뛰어내리기')}
-function leaveAirship(jump=false){const t=P.airship;if(!t)return;const p=shipPosition(t,P.deckX,Math.min(-8,P.deckZ));P.airship=null;P.piloting=false;P.x=cl(p.x,-60,60);P.z=cl(p.z,-82,82);P.y=p.y;P.vy=jump?6:0;P.stance=0;resetHeldInput();msg('비행선 후방 이탈')}
+function leaveAirship(jump=false){const t=P.airship;if(!t)return;const p=shipPosition(t,P.deckX,Math.min(-8,P.deckZ));P.airship=null;P.piloting=false;P.x=cl(p.x,-60,60);P.z=clampWorldZ(p.z,82);P.y=p.y;P.vy=jump?6:0;P.stance=0;resetHeldInput();msg('비행선 후방 이탈')}
 function updateDeckPlayer(dt){const t=P.airship;if(!t?.alive){leaveAirship();return}P.cd=Math.max(0,P.cd-dt);if(P.rt>0){P.rt-=dt;if(P.rt<=0){const w=P.rw,n=Math.min(w.magMax-w.mag,w.res);w.mag+=n;w.res-=n;buildAmmo()}}
   if(!P.piloting){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),r=(keys.KeyD?1:0)-(keys.KeyA?1:0),a=yaw-t.hull,speed=3*dt/(Math.hypot(f,r)||1);P.deckX=cl(P.deckX+(-Math.sin(a)*f+Math.cos(a)*r)*speed,-2.4,2.4);P.deckZ=Math.min(6.6,P.deckZ+(-Math.cos(a)*f-Math.sin(a)*r)*speed);if(P.deckZ<-7.5){leaveAirship(false);return}}
   Object.assign(P,shipPosition(t,P.deckX,P.deckZ));P.eye=P.stance===2?.48:P.stance===1?1.05:1.65;cam.position.set(P.x,P.y+P.eye,P.z);roll=pOff=0;cam.fov+=( (P.piloting?38:ads?42:75)-cam.fov)*Math.min(1,dt*10);cam.updateProjectionMatrix();if(mouseL&&WP[cur].auto&&!P.piloting)pfire();
   $('pr').textContent=P.piloting?'E 운전 종료 · WASD 조종 · Space 상승 / Ctrl 하강 · X 정지':P.deckZ>4?'E 운전석 사용 · 하선은 후방에서 뛰어내리기':P.deckZ<-5?'후방 개방구 · Space 뛰어내리기 / 뒤로 걸어서 이탈':'선실 이동 · 앞쪽 운전석 E · 후방 개방구 하차';
 }
-function buyWeapon(c){if(!P.alive||SHOP[c]===undefined)return false;const cost=gunPrice(c);if(PP<cost){toast('개인 포인트 부족 · '+cost+'P');return false}const id=c===5?(MY?'snG':'snA'):DEF[c][MY],v=VAR[id];const n=NAV.nodes.filter(n=>n.level===0&&Math.abs(n.z)>65&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));const p=n.reduce((a,b)=>Math.hypot(b.x-P.x,b.z-P.z)<Math.hypot(a.x-P.x,a.z-P.z)?b:a,n[0]);if(!p)return false;PP-=cost;dropAt(p,id,{mag:v.mm||0,res:v.res||0,cnt:v.cnt||0},0,true);toast(v.n+' 배치 · 보라색 무기 마커');refreshShop();return true}
+function buyWeapon(c){if(!P.alive||SHOP[c]===undefined)return false;const cost=gunPrice(c);if(PP<cost){toast('개인 포인트 부족 · '+cost+'P');return false}const id=c===5?(MY?'snG':'snA'):DEF[c][MY],v=VAR[id];const n=NAV.nodes.filter(n=>n.level===0&&atBase(n.z,65)&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));const p=n.reduce((a,b)=>Math.hypot(b.x-P.x,b.z-P.z)<Math.hypot(a.x-P.x,a.z-P.z)?b:a,n[0]);if(!p)return false;PP-=cost;dropAt(p,id,{mag:v.mm||0,res:v.res||0,cnt:v.cnt||0},0,true);toast(v.n+' 배치 · 보라색 무기 마커');refreshShop();return true}
 function openShop(tab='guns'){if(!started||over||!P.alive)return;EXP.shopTab=tab;V2.overlay='shop';V2.lockToken++;resetHeldInput();noLock=false;document.exitPointerLock();$('pause').classList.add('hid');$('shop-ui').classList.remove('hid');refreshShop()}
 function closeShop(resume=true){V2.overlay=null;$('shop-ui').classList.add('hid');if(resume)requestBattleLock();else pauseBattle()}
 function refreshShop(){
@@ -1997,7 +2054,7 @@ function refreshShop(){
   const signature=JSON.stringify([EXP.shopTab,PP,P.kills,P.deaths||0,!!EXP.vehicle?.alive,V2.phase,P.alive]);
   if(EXP.shopRenderKey===signature)return;EXP.shopRenderKey=signature;
   $('shop-ui').querySelectorAll('[data-tab]').forEach(b=>{const selected=b.dataset.tab===EXP.shopTab;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected))});
-  $('shop-body').innerHTML=guns?[1,3,2,4,5].map(c=>{const id=c===5?(MY?'snG':'snA'):DEF[c][MY],cost=gunPrice(c);return '<button data-gun="'+c+'" '+(PP<cost?'disabled':'')+'>'+VAR[id].n+'<br>'+cost+'P '+priceChangeBadge(c)+'<small>직전 가격 대비 · 최소 '+SHOP[c]+'P</small><small>한 번 클릭하면 즉시 배치</small></button>'}).join(''):availableVehicles().map(id=>'<button data-vehicle="'+id+'" '+(PP<VEHICLE_COST[id]||EXP.vehicle?.alive||V2.phase!=='normal'?'disabled':'')+'>'+TT[id].n+'<br>'+VEHICLE_COST[id]+'P<small>'+(id==='airship'?'선실 이동 · AI 선원 5명':id==='fcm'||id==='tsar'?'15초 주포 · 자동 기관총':'기존 전차')+'</small><small>한 번 클릭하면 즉시 배치</small></button>').join('');
+  $('shop-body').innerHTML=guns?[1,3,2,4,5].map(c=>{const id=c===5?(MY?'snG':'snA'):DEF[c][MY],cost=gunPrice(c);return '<button data-gun="'+c+'" '+(PP<cost?'disabled':'')+'>'+VAR[id].n+'<br>'+cost+'P '+priceChangeBadge(c)+'<small>직전 가격 대비 · 최소 '+SHOP[c]+'P</small><small>한 번 클릭하면 즉시 배치</small></button>'}).join(''):availableVehicles().map(id=>'<button data-vehicle="'+id+'" '+(PP<VEHICLE_COST[id]||EXP.vehicle?.alive||V2.phase!=='normal'?'disabled':'')+'>'+TT[id].n+'<br>'+VEHICLE_COST[id]+'P<small>'+(id==='airship'?'선실 이동 · AI 선원 5명':id==='fcm'||id==='tsar'?'11초 주포 · 자동 기관총':'기존 전차')+'</small><small>한 번 클릭하면 즉시 배치</small></button>').join('');
   $('shop-note').textContent=guns?'항목 클릭 한 번으로 배치 · 빨강 + 가격 상승 / 파랑 − 가격 하락 · 큰 보라색 보급품에서 F로 획득':'개인 포인트 사용 · 플레이어 탈것 1대 · 작전 및 단일 전투 일반 단계에서 배치 · 보라색 V에서 F 탑승';
 }
 function drawSupplyMarkers(ctx,w,h,floor,large){ctx.save();for(const d of drops)if(d.buy&&(MAP!==3||Math.abs(d.z)>25||((d.y>HI+3)===(floor===2)))){const p=mapPoint(d.x,d.z,w,h);const size=large?12:8;ctx.fillStyle='#c96cff';ctx.strokeStyle='#fff1ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p[0],p[1]-size);ctx.lineTo(p[0]+size*.8,p[1]);ctx.lineTo(p[0],p[1]+size);ctx.lineTo(p[0]-size*.8,p[1]);ctx.closePath();ctx.fill();ctx.stroke();if(large){ctx.font='bold 13px sans-serif';ctx.textAlign='left';ctx.fillStyle='#f4d9ff';ctx.fillText(VAR[d.w.id].n,p[0]+15,p[1]+4)}}
@@ -2019,7 +2076,7 @@ function initExpedition(){
   setupRailFactions();P.deaths=0;
   TT.mk1={n:'영국 마크 I (Mark I) 중전차',hp:850,cost:680,sp:3.5,turret:1,col:0x6c6950};TT.fcm={n:'FCM 2C 중전차',hp:1560,cost:1000,sp:3.2,turret:1,col:0x586347};TT.tsar={n:'차르 전차',hp:1260,cost:900,sp:3.6,turret:1,col:0x655c43};TT.airship={n:'제국 비행선',hp:1320,cost:1200,sp:6,turret:1,col:0x8f9b83};
   const oldHurt=hurt;hurt=function(e,dmg,src,k,credit=src){const alive=e.alive;if(e.special){if(!k)dmg*=.5;else if(src===P||src&&!src.tank)dmg*=.5}oldHurt(e,dmg,src,k,credit);if(alive&&!e.alive&&e===P){P.deaths++;if(P.airship)leaveAirship()}if(alive&&!e.alive&&e.airship===true){for(const b of e.crew){b.alive=false;b.g.visible=false}if(P.airship===e){leaveAirship();oldHurt(P,60,{team:-1},1)}}};
-  const oldTank=upTank;upTank=function(t,dt){if(!t.alive){updateAutoTurrets(t,0);return}if(t.airship){updateAirship(t,dt);return}const x=t.x,z=t.z;if(t.playerOwned&&!t.drv){t.cd=Math.max(0,t.cd-dt)}else oldTank(t,dt);if(t.special){if(!t.drv){t.hull=t.parkHull??t.hull;t.parkHull=t.hull}for(const g of t.extraGuns)g.rotation.y=t.tur-t.hull;const travel=t.frameTravel||0;t.frameTravel=0;for(const w of t.wheels||[])w.rotation.x+=travel/4.3;if(t.tailWheel)t.tailWheel.rotation.x+=travel/.8;updateAutoTurrets(t,dt);syncTank(t)}};
+  const oldTank=upTank;upTank=function(t,dt){if(!t.alive){updateAutoTurrets(t,0);return}if(t.airship){updateAirship(t,dt);return}const x=t.x,z=t.z;if(t.playerOwned&&!t.drv){t.cd=Math.max(0,t.cd-dt)}else oldTank(t,dt);if(t.special){for(const g of t.extraGuns)g.rotation.y=t.tur-t.hull;const travel=t.frameTravel||0;t.frameTravel=0;for(const w of t.wheels||[])w.rotation.x+=travel/4.3;if(t.tailWheel)t.tailWheel.rotation.x+=travel/.8;updateAutoTurrets(t,dt);syncTank(t)}};
   const oldDrive=updTankP;updTankP=function(dt){const t=P.tank,x=t.x,z=t.z;oldDrive(dt);t.frameTravel=(t.x-x)*Math.sin(t.hull)+(t.z-z)*Math.cos(t.hull)};
   const oldTankFire=tankFire;tankFire=function(t,dir){if(t.special)return fireHeavy(t,dir);return oldTankFire(t,dir)};
   const oldPfire=pfire;pfire=function(){if(P.piloting)return;if(P.tank?.special){if(P.alive)fireHeavy(P.tank,lookDir());return}oldPfire()};
@@ -2034,7 +2091,7 @@ function initSupplyUI(){
   box.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.tab){EXP.shopTab=b.dataset.tab;refreshShop()}if(b.dataset.gun)buyWeapon(Number(b.dataset.gun));if(b.dataset.vehicle)buyPlayerVehicle(b.dataset.vehicle)});$('shop-close').onclick=()=>closeShop(true);$('buy').onclick=()=>openShop();$('buy').style.cursor='pointer';$('buy').setAttribute('role','button');$('buy').tabIndex=0;
   const launchers=document.createElement('div');launchers.className='supply-launchers pause-launchers';launchers.innerHTML='<button type="button" data-launch="guns">무기 생성</button><button type="button" data-launch="vehicles">탈것 생성</button>';launchers.onclick=e=>{e.stopPropagation();const button=e.target.closest('[data-launch]');if(button)openShop(button.dataset.launch)};$('pause').appendChild(launchers);
   const go=$('go').onclick;$('go').onclick=()=>{syncMusicUI();go()};
-  for(const [x,z]of[[-40,-72],[0,-77],[40,-72],[-40,72],[0,77],[40,72],[-40,-28],[40,28]]){const id=nearestNav(x,getTerrainElevation(x,z),z,8);if(id<0)continue;const n=NAV.nodes[id],g=new THREE.Group();makePart(g,.85,.5,.65,0xc4c9b5,0,.25,0);makePart(g,.6,.025,.12,0xa9312c,0,.51,0);makePart(g,.12,.025,.5,0xa9312c,0,.52,0);g.position.set(n.x,n.y,n.z);scene.add(g);EXP.heals.push({x:n.x,y:n.y,z:n.z,g,left:0})}
+  for(const [x,z]of[[-40,-72],[0,-77],[40,-72],[-40,72],[0,77],[40,72],[-40,-28],[40,28]]){const wz=Math.abs(z)>60?rearZ(z):z,id=nearestNav(x,getTerrainElevation(x,wz),wz,8);if(id<0)continue;const n=NAV.nodes[id],g=new THREE.Group();makePart(g,.85,.5,.65,0xc4c9b5,0,.25,0);makePart(g,.6,.025,.12,0xa9312c,0,.51,0);makePart(g,.12,.025,.5,0xa9312c,0,.52,0);g.position.set(n.x,n.y,n.z);scene.add(g);EXP.heals.push({x:n.x,y:n.y,z:n.z,g,left:0})}
   if(MAP===4){const c=document.createElement('canvas');c.width=90;c.height=60;const a=c.getContext('2d');['#ffffff','#214aae','#a72f32'].forEach((v,i)=>{a.fillStyle=v;a.fillRect(0,i*20,90,20)});const tex=new THREE.CanvasTexture(c),oldFlags=flags;flags=function(dt){oldFlags(dt);for(const f of ALL_FLAGS){const map=f.owner===0?tex:null;if(f.cloth.material.map!==map){f.cloth.material.map=map;f.cloth.material.needsUpdate=true}if(f.owner===0)f.cloth.material.color.setHex(0xffffff)}};$('menu').querySelector('p').textContent='탄넨베르크 · 러시아군 대 독일군 · 요새화된 마을을 사수하라! 진흙탕: 보병 속도 50% · 전차 속도 10%. TAB키로 무기구매.';$('top').firstElementChild.querySelector('b').textContent='러시아 제국 🇷🇺';document.querySelectorAll('#menu > .cur,#end > .cur').forEach(e=>e.textContent='현재 팀: '+(MY?'독일군':'러시아군')+' · 탄넨베르크');}
   refreshShop();
 }
@@ -2140,26 +2197,26 @@ function initBattleRadio(){const radio=document.createElement('div');radio.id='r
 const TANNENBERG={banners:[],villages:[],mudLevel:0};
 function villageBanner(team,x,y,z){const canvas=document.createElement('canvas');canvas.width=120;canvas.height=180;const a=canvas.getContext('2d');(team?['#171717','#eeeece','#9b2027']:['#efeee3','#264d9a','#b12d34']).forEach((c,i)=>{a.fillStyle=c;a.fillRect(0,i*60,120,60)});if(MAP===5){a.clearRect(0,0,120,180);if(team){a.fillStyle='#b21f25';a.fillRect(0,0,120,180);a.fillStyle='#f7d147';a.font='45px sans-serif';a.fillText('☭',4,48)}else{a.fillStyle='#eee9d9';a.fillRect(0,0,120,90);a.fillStyle='#aa2831';a.fillRect(0,90,120,90);a.fillStyle='#295986';a.beginPath();a.moveTo(0,0);a.lineTo(60,90);a.lineTo(0,180);a.fill()}}const banner=new THREE.Mesh(new THREE.PlaneGeometry(1.8,2.7),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(canvas),side:THREE.DoubleSide}));banner.position.set(x,y,z);scene.add(banner);TANNENBERG.banners.push(banner);addBox(2.2,.1,.12,0x46392b,x,y+1.4,z,false)}
 function buildTannenbergVillage(){
-  for(const team of[0,1]){const sg=team?1:-1;plane(130,25,HI,sg*72.5,0x676149);
+  for(const team of[0,1]){const sg=team?1:-1;plane(130,25,HI,rearZ(sg*72.5),0x676149);
     for(const [i,x]of[-40,0,40].entries()){
-      const z=sg*79,front=sg*74,wall=[0x8d836c,0x9b947d,0x796a58][i];
-      addBox(.35,3.6,10,wall,x-6,HI,z);addBox(.35,3.6,10,wall,x+6,HI,z);addBox(12,3.6,.35,wall,x,HI,sg*84);
+      const z=rearZ(sg*79),front=rearZ(sg*74),wall=[0x8d836c,0x9b947d,0x796a58][i];
+      addBox(.35,3.6,10,wall,x-6,HI,z);addBox(.35,3.6,10,wall,x+6,HI,z);addBox(12,3.6,.35,wall,x,HI,rearZ(sg*84));
       for(const side of[-1,1]){addBox(4.2,.9,.35,wall,x+side*3.9,HI,front);addBox(.3,3.6,.35,0x4e4132,x+side*1.8,HI,front);addBox(4.2,.8,.35,wall,x+side*3.9,HI+2.8,front)}
       addBox(12,.45,.35,0x4e4132,x,HI+3.15,front);addBox(12.7,.28,10.8,0x4c443c,x,HI+3.6,z);
-      for(const side of[-1,1]){const roof=new THREE.Mesh(new THREE.BoxGeometry(6.8,.18,11),M(0x514338));roof.position.set(x+side*3.1,HI+4.65,z);roof.rotation.z=-side*.28;scene.add(roof);villageBanner(team,x+side*4.1,HI+2.2,front-sg*.24)}
-      for(const zz of[71,68])for(const side of[-1,1])addBox(6,.75,.7,0x706044,x+side*(zz===71?5:8),HI,sg*zz);
+      addGable(x,HI+3.88,z,12.7,10.8,1.7,0x514338);for(const side of[-1,1])villageBanner(team,x+side*4.1,HI+2.2,front-sg*.24)
+      for(const zz of[71,68])for(const side of[-1,1])addBox(6,.75,.7,0x706044,x+side*(zz===71?5:8),HI,rearZ(sg*zz));
       const sign=labelSprite(['마을 관측소','마을 지휘소','마을 보급소'][i],'#e6d5a4',4.2);sign.position.set(x,HI+3.05,front-sg*.4);scene.add(sign);
       TANNENBERG.villages.push({x,y:HI,z,team});TACTICAL_ZONES.push({type:'trench',name:'요새화된 마을',x,y:HI,z,r:9});
     }
     for(const [i,x]of[-54,-44,-32,-20,-8,8,20,32,44,54].entries()){
-      const front=62+(i%2)*3,z=sg*(front+1);addBox(3.2,.6,1.6,0x69583e,x,HI,z);addBox(3.2,.3,.9,0x7a694f,x,HI,sg*(front+2.25));addBox(4,.85,.7,0x9a8766,x,HI,sg*(front-.3));
+      const front=rearDepth(sg)+62+(i%2)*3,z=sg*(front+1);addBox(3.2,.6,1.6,0x69583e,x,HI,z);addBox(3.2,.3,.9,0x7a694f,x,HI,sg*(front+2.25));addBox(4,.85,.7,0x9a8766,x,HI,sg*(front-.3));
       for(const [dx,dz]of[[-.9,-.3],[0,-.3],[.9,-.3],[-.5,.35],[.5,.35]])DEFENSE_POSTS.push({x:x+dx,y:HI+.6,z:z+sg*dz,r:.38,kind:'post',home:team,sg,entry:{x:x+dx,y:HI,z:sg*(front+3.1),r:.4,kind:'post-entry'}});
     }
   }
 }
 function buildTannenbergMud(){
   for(const sg of[-1,1])for(const [row,z]of[27,44,55,70].entries())for(const [col,x]of[-51,-27,-3,21,47].entries()){
-    const q={x:x+(row%2?3:0),z:sg*z,r:row===3?5:7+(col%2)*2};SWAMPS.push(q);
+    const q={x:x+(row%2?3:0),z:row===3?rearZ(sg*z):sg*z,r:row===3?5:7+(col%2)*2};SWAMPS.push(q);
     const m=new THREE.Mesh(new THREE.CircleGeometry(q.r,18),new THREE.MeshPhongMaterial({color:(row+col)%2?0x3c3023:0x50402d,shininess:45,transparent:true,opacity:.92,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(q.x,HI+.045,q.z);scene.add(m);reg('swamp','깊은 진흙탕',q.x,q.z,q.r);
     const sheen=new THREE.Mesh(new THREE.CircleGeometry(q.r*.5,12),new THREE.MeshPhongMaterial({color:0x777163,shininess:80,transparent:true,opacity:.35,depthWrite:false}));sheen.rotation.x=-Math.PI/2;sheen.scale.y=.55;sheen.position.set(q.x+1,HI+.055,q.z);scene.add(sheen);
   }
@@ -2175,7 +2232,7 @@ function showDeployment(name,cost,vehicle=false){const box=$('deployment-ui');if
 function updateImperialUI(dt,run){const canvas=$('aux-aim');if(!canvas)return;if(canvas.width!==innerWidth||canvas.height!==innerHeight){canvas.width=innerWidth;canvas.height=innerHeight}const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);$('binoculars').classList.toggle('hid',!run||!P.piloting);IMPERIAL.auxHit=Math.max(0,IMPERIAL.auxHit-(run?dt:0));IMPERIAL.deployLeft=Math.max(0,IMPERIAL.deployLeft-dt);$('deployment-ui').classList.toggle('hid',IMPERIAL.deployLeft<=0);
   for(const vehicle of tanks)if(vehicle.boardingLabel)vehicle.boardingLabel.visible=vehicle.alive&&vehicle!==P.tank&&vehicle!==P.airship;if(IMPERIAL.deployVehicle&&(P.tank||P.airship)){IMPERIAL.deployLeft=0;$('deployment-ui').classList.add('hid')}if(!run||!P.alive)return;const t=P.tank||P.airship||(P.trainCar!=null?RAIL.cars[P.trainCar]:null);ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
   if(t?.alive&&t.team===MY)for(const q of t.autoTurrets||[]){if(!q.target?.alive||!q.aim)continue;const p=q.aim.clone().project(cam);if(p.z<-1||p.z>1||Math.abs(p.x)>1||Math.abs(p.y)>1)continue;ctx.beginPath();ctx.arc((p.x+1)*innerWidth/2,(1-p.y)*innerHeight/2,5,0,Math.PI*2);ctx.stroke()}
-  drawTsarSights(ctx);if(IMPERIAL.auxHit>0){const x=innerWidth/2,y=innerHeight/2;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-8,y-8);ctx.lineTo(x+8,y+8);ctx.moveTo(x+8,y-8);ctx.lineTo(x-8,y+8);ctx.stroke()}
+  drawTwinGunSights(ctx);if(IMPERIAL.auxHit>0){const x=innerWidth/2,y=innerHeight/2;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-8,y-8);ctx.lineTo(x+8,y+8);ctx.moveTo(x+8,y-8);ctx.lineTo(x-8,y+8);ctx.stroke()}
 }
 function initImperial(){
   const oldHurt=hurt;hurt=function(e,...args){oldHurt(e,...args);if(e.cavalry&&!e.alive)e.cavalry.g.visible=false};
@@ -2248,7 +2305,7 @@ const CAV_TACTICS={groups:new Map(),dry:null,builds:0,nextBuild:0};
 function initCavalryBatch(){if(!IMPERIAL.cavalry.length)return;const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:0xffffff}),256);mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.frustumCulled=false;mesh.count=0;scene.add(mesh);CAV_TACTICS.mesh=mesh;for(const b of IMPERIAL.cavalry)if(b.cavalry)scene.remove(b.cavalry.g)}
 function drawCavalryBatch(){const mesh=CAV_TACTICS.mesh;if(!mesh)return;let n=0;for(const b of IMPERIAL.cavalry)if(b.alive&&b.cavalry){const g=b.cavalry.g;g.updateMatrixWorld(true);for(const m of g.children){if(!m.geometry?.parameters)continue;const p=m.geometry.parameters,matrix=m.matrixWorld.clone().multiply(new THREE.Matrix4().makeScale(p.width,p.height,p.depth));mesh.setMatrixAt(n,matrix);mesh.setColorAt(n++,m.material.color)}}mesh.count=n;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true}
 function updateCavalryOrders(b,dt){if(!b.cavalry)return;const key=b.team*3+b.id%3;let group=CAV_TACTICS.groups.get(key);
-  if((!group||V2.time>=group.until)&&V2.time>=CAV_TACTICS.nextBuild){CAV_TACTICS.nextBuild=V2.time+.12;const actors=nearbyActors(b.x,b.z,25),foes=actors.filter(e=>e.team!==b.team).length,friends=actors.length-foes,advance=friends>Math.max(3,foes)*1.8?true:!group?.advance,objective=objectiveFor(b),x=objective?.x||0,z=advance?objective?.z||0:cl(b.z+(b.team?16:-16),-70,70);
+  if((!group||V2.time>=group.until)&&V2.time>=CAV_TACTICS.nextBuild){CAV_TACTICS.nextBuild=V2.time+.12;const actors=nearbyActors(b.x,b.z,25),foes=actors.filter(e=>e.team!==b.team).length,friends=actors.length-foes,advance=friends>Math.max(3,foes)*1.8?true:!group?.advance,objective=objectiveFor(b),x=objective?.x||0,z=advance?objective?.z||0:clampWorldZ(b.z+(b.team?16:-16),70);
     let best=null,d=Infinity;for(const n of NAV.nodes){if(n.level!==0)continue;const q=(n.x-x)**2+(n.z-z)**2+(n.mud?9:0);if(q<d){d=q;best=n}}
     if(best){if(group)NAV.flows.delete(group.goal);group={advance,until:V2.time+(advance?9:6),goal:{x:best.x,y:best.y,z:best.z,r:2,kind:'rally',preferDry:true}};CAV_TACTICS.groups.set(key,group);CAV_TACTICS.builds++}
   }
@@ -2315,7 +2372,7 @@ function initRailPhysics(){if(MAP!==5)return;RAIL.connectors=[];
 
 function tankFootprint(t){return{halfX:(t.wd||3)/2+.15,halfZ:(t.len||5)/2+.15,x:{x:Math.cos(t.hull),z:-Math.sin(t.hull)},z:{x:Math.sin(t.hull),z:Math.cos(t.hull)}}}
 function tankOverlap(a,b){const aa=tankFootprint(a),bb=tankFootprint(b),dx=b.x-a.x,dz=b.z-a.z;let depth=Infinity,normal=null;for(const axis of[aa.x,aa.z,bb.x,bb.z]){const dot=(u,v)=>u.x*v.x+u.z*v.z,ra=aa.halfX*Math.abs(dot(aa.x,axis))+aa.halfZ*Math.abs(dot(aa.z,axis)),rb=bb.halfX*Math.abs(dot(bb.x,axis))+bb.halfZ*Math.abs(dot(bb.z,axis)),d=dx*axis.x+dz*axis.z,overlap=ra+rb-Math.abs(d);if(overlap<=0)return null;if(overlap<depth){depth=overlap;normal={x:axis.x*(d>=0?1:-1),z:axis.z*(d>=0?1:-1)}}}return{...normal,depth}}
-function pushTank(t,dx,dz){const x=cl(t.x+dx,-62,62),z=cl(t.z+dz,-83,83),lim=t.type==='ft'?1.25:1.6;if(tankTrainContact(t,x,z))return false;for(const c of nearbyCols(x,z,2))if(x>c.a-1.3&&x<c.b+1.3&&z>c.c-1.3&&z<c.e+1.3&&c.hi-t.y>lim&&c.lo<t.y+2.2)return false;if(getTerrainElevation(x,z)-t.y>lim)return false;const mx=x-t.x,mz=z-t.z;t.x=x;t.z=z;if(P.tank===t){P.x+=mx;P.z+=mz;cam.position.x+=mx;cam.position.z+=mz}syncTank(t);return true}
+function pushTank(t,dx,dz){const x=cl(t.x+dx,-62,62),z=clampWorldZ(t.z+dz),lim=t.type==='ft'?1.25:1.6;if(tankTrainContact(t,x,z))return false;for(const c of nearbyCols(x,z,2))if(x>c.a-1.3&&x<c.b+1.3&&z>c.c-1.3&&z<c.e+1.3&&c.hi-t.y>lim&&c.lo<t.y+2.2)return false;if(getTerrainElevation(x,z)-t.y>lim)return false;const mx=x-t.x,mz=z-t.z;t.x=x;t.z=z;if(P.tank===t){P.x+=mx;P.z+=mz;cam.position.x+=mx;cam.position.z+=mz}syncTank(t);return true}
 function tankTrainContact(t,x=t.x,z=t.z,hull=t.hull,theta=null){
   if(MAP!==5||t.airship)return null;const tank={x,z,hull,wd:(t.wd||3)+.4,len:(t.len||5)+.3};
   for(const frame of theta===null?railFrames():RAIL.cars){const p=theta===null?frame:railPose(frame.index,theta),height=t.special==='tsar'?9:4;if(t.y+height<frame.y-.9||t.y>frame.y+3.1)continue;
@@ -2612,7 +2669,7 @@ function planReconOrders(team){
   clusters.sort((a,b)=>b.weight-a.weight);let budget=Math.floor(units.length*.55),used=new Set();
   for(const c of clusters.slice(0,3)){const number=Math.min(budget,Math.max(3,Math.ceil(c.weight*1.5)));if(number<2)break;
     const picked=units.filter(b=>!used.has(b)).sort((a,b)=>Math.hypot(a.x-c.x,a.z-c.z)-Math.hypot(b.x-c.x,b.z-c.z)).slice(0,number),large=c.weight>=6;
-    for(let lane=0;lane<(large?3:1);lane++){const x=cl(c.x+(large?(lane-1)*6:0),-60,60),z=cl(c.z+(team?5:-5),-80,80),id=nearestNav(x,c.y,z,6),n=id>=0?NAV.nodes[id]:c;
+    for(let lane=0;lane<(large?3:1);lane++){const x=cl(c.x+(large?(lane-1)*6:0),-60,60),z=clampWorldZ(c.z+(team?5:-5),80),id=nearestNav(x,c.y,z,6),n=id>=0?NAV.nodes[id]:c;
       const order={goal:{x:n.x,y:n.y,z:n.z,r:3,kind:'recon'},trainCar:c.trainCar,label:large?['좌측 우회','중앙 제압','우측 우회'][lane]:'탐지 병력 차단',until:V2.time+3.5,count:0};
       picked.filter((b,i)=>i%(large?3:1)===lane).forEach(b=>{used.add(b);b.reconOrder=order;b.navClock=0;order.count++});if(order.count)h.reconOrders.push(order);
     }budget-=picked.length;
@@ -2703,10 +2760,29 @@ function initMotion(){
 
 // Three.js modular destruction: static structural graph, bounded dynamic debris pool.
 // No runtime CSG, voxelization or persistent rigid-body solver for sleeping rubble.
-const DESTRUCTION={parts:[],groups:new Map(),dirty:new Set(),queue:[],pool:[],active:[],baked:[],wrecks:[],batch:null,dummy:new THREE.Object3D(),accumulator:0,navDirty:new Set(),navClock:0,maxActive:256,partBudget:5,wakeQueue:[],foliageFalls:[]};
+const DESTRUCTION={parts:[],groups:new Map(),dirty:new Set(),queue:[],pool:[],active:[],baked:[],wrecks:[],batch:null,dummy:new THREE.Object3D(),accumulator:0,navDirty:new Set(),navClock:0,maxActive:128,partBudget:5,effectBudget:3,wakeQueue:[],foliageFalls:[]};
 function addHouseUpperStoreys(x,z,base,levels){for(let level=0;level<levels;level++){const y=base+level*3.8;for(const side of[-1,1]){for(const a of[-2.75,0,2.75])addBox(a===0?1:1.5,3.4,.5,0x928777,x+a,y,z+side*3);for(const a of[-2.2,2.2])addBox(.5,3.4,1.6,0x928777,x+side*3.5,y,z+a);addBox(7,1,.5,0x928777,x,y,z+side*3);addBox(.5,1,6,0x928777,x+side*3.5,y,z);addBox(7,.5,.5,0x928777,x,y+2.9,z+side*3);addBox(.5,.5,6,0x928777,x+side*3.5,y+2.9,z)}if(level===0)slabHole(7.6,6.6,.4,0x6b3b2b,x,y+3.4,z,-2.6,3.25,1.0,2.75);else addBox(7.6,.4,6.6,0x6b3b2b,x,y+3.4,z)}churchStairs(x,z,base-4.4,base,base+3.8)}
 function slabHole(w,d,t,col,cx,y,cz,hx0,hx1,hz0,hz1){const x0=-w/2,x1=w/2,z0=-d/2,z1=d/2,add=(a,c,e,f)=>{if(c-a>.04&&f-e>.04)addBox(c-a,t,f-e,col,cx+(a+c)/2,y,cz+(e+f)/2)};add(x0,x1,z0,hz0);add(x0,x1,hz1,z1);add(x0,hx0,hz0,hz1);add(hx1,x1,hz0,hz1)}
-function churchStairs(x,z,f1,f2,f3){const col=0x8a7c66;for(let i=0;i<16;i++)addBox(.38,(i+1)*(f2-f1)/16,1.75,col,x-3+i*.38+.19,f1,z-1.875);for(let i=0;i<14;i++)addBox(.4,(i+1)*(f3-f2)/14,1.75,col,x+3-i*.4-.2,f2,z+1.875)}
+function churchStairs(x,z,f1,f2,f3){const col=0x8a7c66;for(let i=0;i<16;i++)addBox(.38,(i+1)*(f2-f1)/16,1.75,col,x-3+i*.38+.19,f1,z-1.875).userData.unit='stair:lower:'+Math.floor(i/8);for(let i=0;i<14;i++)addBox(.4,(i+1)*(f3-f2)/14,1.75,col,x+3-i*.4-.2,f2,z+1.875).userData.unit='stair:upper:'+Math.floor(i/7)}
+function addGable(x,y,z,w,d,h,color){
+  const g=new THREE.BufferGeometry(),a=w/2,b=d/2;
+  g.setAttribute('position',new THREE.Float32BufferAttribute([-a,0,-b,a,0,-b,0,h,-b,-a,0,b,a,0,b,0,h,b],3));
+  g.setIndex([0,2,1,3,4,5,0,3,5,0,5,2,1,2,5,1,5,4]);g.computeVertexNormals();
+  const mesh=new THREE.Mesh(g,M(color));mesh.position.set(x,y,z);scene.add(mesh);return mesh;
+}
+function markHouseRange(start,key,x,z,w,d){
+  markStructureRange(start,key);
+  for(let i=start;i<solids.length;i++){
+    const m=solids[i],g=m.geometry.parameters;if(m.userData.unit||!g||g.height<.65&&g.width>2&&g.depth>2)continue;
+    const dx=m.position.x-x,dz=m.position.z-z;
+    const front=Math.abs(dz)>=d/2-.35,side=Math.abs(dx)>=w/2-.35;
+    if(!front&&!side)continue;
+    const along=front?dx/w:dz/d,face=front?(dz<0?'south':'north'):(dx<0?'west':'east');
+    // Narrow trim belongs to the adjacent panel. Doors and windows keep their own collision shapes.
+    const column=Math.max(0,Math.min(2,Math.floor((along+.5)*3))),level=m.position.y>=getTerrainElevation(x,z)+3.55?1:0;
+    m.userData.unit=face+':'+(level*3+column);
+  }
+}
 function structuralBounds(m){const p=m.geometry.parameters;return{a:m.position.x-p.width/2,b:m.position.x+p.width/2,c:m.position.z-p.depth/2,e:m.position.z+p.depth/2,lo:m.position.y-p.height/2,hi:m.position.y+p.height/2}}
 function markStructureRange(start,key,partition=false){for(let i=start;i<solids.length;i++)if(solids[i].geometry?.type==='BoxGeometry')solids[i].userData.structure={key,partition}}
 function disableStructuralCollider(c){if(!c||c.disabled)return;c.disabled=true;for(let x=Math.floor(c.a/CELL);x<=Math.floor(c.b/CELL);x++)for(let z=Math.floor(c.c/CELL);z<=Math.floor(c.e/CELL);z++){const list=STATIC_GRID.get(x+','+z),i=list?.indexOf(c);if(i>=0)list.splice(i,1)}c.a=c.c=c.lo=Infinity;c.b=c.e=c.hi=-Infinity}
@@ -2723,18 +2799,32 @@ function checkStructure(group){
   for(const p of group.parts)if(p.alive&&!connected.has(p))detachStructuralPart(p,group.bias);
   for(const plate of group.plates)if(plate.capacity>0){const remaining=plate.support.reduce((s,p)=>s+(p.alive?p.mass*(.3+.7*p.hp/p.maxhp):0),0);if(remaining<plate.capacity*.23)for(const p of plate.parts)if(p.alive)detachStructuralPart(p,group.bias)}
 }
-function damagePart(p,damage,direction=null){if(!p?.alive||damage<=0)return;p.hp-=damage;if(direction)p.group.bias={x:direction.x,z:direction.z};if(p.hp<=0)detachStructuralPart(p,p.group.bias);else{DESTRUCTION.dirty.add(p.group);const shade=1-.28*(1-p.hp/p.maxhp);DESTRUCTION.batch.setColorAt(p.id,p.color.clone().multiplyScalar(shade));DESTRUCTION.batch.instanceColor.needsUpdate=true}}
+function combineStructuralUnits(group){
+  const units=new Map(),leaders=[];
+  for(const part of group.parts){
+    if(!part.unit){leaders.push(part);continue}
+    const lead=units.get(part.unit);
+    if(!lead){units.set(part.unit,part);leaders.push(part);part.members=[{id:part.id,collider:part.collider,color:part.color}];continue}
+    lead.members.push({id:part.id,collider:part.collider,color:part.color});part.collider.part=lead;
+    const b=lead.bounds,q=part.bounds;
+    for(const k of ['a','c','lo'])b[k]=Math.min(b[k],q[k]);
+    for(const k of ['b','e','hi'])b[k]=Math.max(b[k],q[k]);
+    lead.mass+=part.mass;lead.x=(b.a+b.b)/2;lead.y=(b.lo+b.hi)/2;lead.z=(b.c+b.e)/2;
+  }
+  group.parts=leaders;
+}
+function damagePart(p,damage,direction=null){if(!p?.alive||damage<=0)return;p.hp-=damage;if(direction)p.group.bias={x:direction.x,z:direction.z};if(p.hp<=0)detachStructuralPart(p,p.group.bias);else{DESTRUCTION.dirty.add(p.group);const shade=1-.28*(1-p.hp/p.maxhp);for(const member of p.members||[p])DESTRUCTION.batch.setColorAt(member.id,member.color.clone().multiplyScalar(shade));DESTRUCTION.batch.instanceColor.needsUpdate=true}}
 function detachStructuralPart(p,bias={x:0,z:0}){
   if(!p.alive)return;p.alive=false;
   for(const record of p.sleepers||[])queueRubbleFall(record);p.sleepers=new Set();
   if(p.crown&&p.group.foliage){DESTRUCTION.foliageFalls.push({mesh:p.group.foliage,velocity:new THREE.Vector3(R(-1,1),-1,R(-1,1)),spin:R(-.7,.7),age:0});p.group.foliage=null}
-  disableStructuralCollider(p.collider);const d=DESTRUCTION.dummy;d.position.set(p.x,p.y,p.z);d.rotation.set(0,0,0);d.scale.setScalar(0);d.updateMatrix();DESTRUCTION.batch.setMatrixAt(p.id,d.matrix);DESTRUCTION.batch.instanceMatrix.needsUpdate=true;
+  if(p.gable)scene.remove(p.gable);const d=DESTRUCTION.dummy;d.position.set(p.x,p.y,p.z);d.rotation.set(0,0,0);d.scale.setScalar(0);d.updateMatrix();for(const member of p.members||[p]){disableStructuralCollider(member.collider);DESTRUCTION.batch.setMatrixAt(member.id,d.matrix)}DESTRUCTION.batch.instanceMatrix.needsUpdate=true;
   p.shear={x:(bias?.x||0)*1.7+R(-1.4,1.4),z:(bias?.z||0)*1.7+R(-1.4,1.4)};DESTRUCTION.queue.push(p);DESTRUCTION.dirty.add(p.group);
   const b=p.bounds;for(let x=Math.floor(b.a/CELL);x<=Math.floor(b.b/CELL);x++)for(let z=Math.floor(b.c/CELL);z<=Math.floor(b.e/CELL);z++)DESTRUCTION.navDirty.add(x+','+z);
-  if(Math.hypot(p.x-P.x,p.z-P.z)<65){puff(new THREE.Vector3(p.x,p.y,p.z),3,0x817564,1.8,2,.8);if(typeof playBattleEffect==='function')playBattleEffect('collapse',p,.45)}
+  if(DESTRUCTION.effectBudget>0&&Math.hypot(p.x-P.x,p.z-P.z)<65){DESTRUCTION.effectBudget--;puff(new THREE.Vector3(p.x,p.y,p.z),3,0x817564,1.8,2,.8);if(typeof playBattleEffect==='function')playBattleEffect('collapse',p,.45)}
 }
 function damageStructureAt(point,damage,src,blast=false,direction=null){
-  let best=null,distance=Infinity;for(const c of nearbyCols(point.x,point.z,.2)){const p=c.part;if(!p?.alive)continue;const b=p.bounds,dx=Math.max(b.a-point.x,0,point.x-b.b),dy=Math.max(b.lo-point.y,0,point.y-b.hi),dz=Math.max(b.c-point.z,0,point.z-b.e),d=dx*dx+dy*dy+dz*dz;if(d<.08&&d<distance){best=p;distance=d}}
+  let best=null,distance=Infinity;for(const c of nearbyCols(point.x,point.z,.2)){const p=c.part;if(!p?.alive)continue;const b=c,dx=Math.max(b.a-point.x,0,point.x-b.b),dy=Math.max(b.lo-point.y,0,point.y-b.hi),dz=Math.max(b.c-point.z,0,point.z-b.e),d=dx*dx+dy*dy+dz*dz;if(d<.08&&d<distance){best=p;distance=d}}
   if(best)damagePart(best,damage*(blast?1.2:.1),direction);
 }
 function blastStructures(point,radius,damage){const seen=new Set();for(const c of nearbyCols(point.x,point.z,radius)){const p=c.part;if(!p?.alive||seen.has(p))continue;seen.add(p);const b=p.bounds,dx=Math.max(b.a-point.x,0,point.x-b.b),dy=Math.max(b.lo-point.y,0,point.y-b.hi),dz=Math.max(b.c-point.z,0,point.z-b.e),distance=Math.hypot(dx,dy,dz);if(distance<radius)damagePart(p,damage*(1-distance/radius)*1.35,{x:p.x-point.x,z:p.z-point.z})}}
@@ -2747,7 +2837,8 @@ function spawnDebris(p,scale,mass,color,velocity){
   const d=DESTRUCTION.pool.pop();if(!d)return false;d.position.copy(p);d.scale.copy(scale);d.mass=mass;d.color.copy(color);d.velocity.copy(velocity);d.rotation.set(R(-.15,.15),R(-.4,.4),R(-.15,.15));d.angular.set(R(-1.8,1.8),R(-1.5,1.5),R(-1.8,1.8));d.age=0;d.quiet=0;d.support=null;d.record=null;d.lastPush=-Infinity;DESTRUCTION.active.push(d);return true;
 }
 function fragmentPart(p){
-  const w=p.bounds.b-p.bounds.a,h=p.bounds.hi-p.bounds.lo,l=p.bounds.e-p.bounds.c,nx=w>1.25?2:1,ny=h>1.25?2:1,nz=l>1.25?2:1,total=nx*ny*nz;if(DESTRUCTION.pool.length<total)return false;
+  const w=p.bounds.b-p.bounds.a,h=p.bounds.hi-p.bounds.lo,l=p.bounds.e-p.bounds.c,longest=Math.max(w,h,l);
+  const split=longest>1.25&&!p.unit?.startsWith('stair:'),nx=split&&w===longest?2:1,ny=split&&nx===1&&h===longest?2:1,nz=split&&nx===1&&ny===1?2:1,total=nx*ny*nz;if(DESTRUCTION.pool.length<total)return false;
   const size=new THREE.Vector3(w/nx*.94,h/ny*.94,l/nz*.94);
   for(let x=0;x<nx;x++)for(let y=0;y<ny;y++)for(let z=0;z<nz;z++)spawnDebris(new THREE.Vector3(p.bounds.a+(x+.5)*w/nx,p.bounds.lo+(y+.5)*h/ny,p.bounds.c+(z+.5)*l/nz),size,p.mass/total,p.color,new THREE.Vector3(cl(p.shear.x,-4,4)+R(-.4,.4),R(-.7,.3),cl(p.shear.z,-4,4)+R(-.4,.4)));
   return true;
@@ -2767,8 +2858,8 @@ function stepDebris(dt){
 function debrisHalfHeight(d){const o=DESTRUCTION.dummy;o.rotation.copy(d.rotation);o.scale.setScalar(1);o.updateMatrix();const e=o.matrix.elements;return (Math.abs(e[1])*d.scale.x+Math.abs(e[5])*d.scale.y+Math.abs(e[9])*d.scale.z)/2}
 function refreshDestroyedNavigation(){
   const region=DESTRUCTION.navDirty.values().next().value;if(!region)return;DESTRUCTION.navDirty.delete(region);const[cx,cz]=region.split(',').map(Number),changed=[];
-  for(let ix=Math.max(0,Math.floor((cx*CELL+61.5)/NAV.step)-2);ix<=Math.min(82,Math.ceil(((cx+1)*CELL+61.5)/NAV.step)+2);ix++)for(let iz=Math.max(0,Math.floor((cz*CELL+82.5)/NAV.step)-2);iz<=Math.min(110,Math.ceil(((cz+1)*CELL+82.5)/NAV.step)+2);iz++)for(let level=0;level<NAV_LEVELS();level++){
-    const x=-61.5+ix*NAV.step,z=-82.5+iz*NAV.step,y=level?upperSurface(x,z):getTerrainElevation(x,z),key=navKey(ix,iz,level);let id=NAV.lookup.get(key);
+  for(let ix=Math.max(0,Math.floor((cx*CELL+61.5)/NAV.step)-2);ix<=Math.min(82,Math.ceil(((cx+1)*CELL+61.5)/NAV.step)+2);ix++)for(let iz=Math.max(0,navRow(cz*CELL)-2);iz<=Math.min(navRows.length-1,navRow((cz+1)*CELL)+2);iz++)for(let level=0;level<NAV_LEVELS();level++){
+    const x=-61.5+ix*NAV.step,z=navRows[iz],y=level?upperSurface(x,z):getTerrainElevation(x,z),key=navKey(ix,iz,level);let id=NAV.lookup.get(key);
     const invalid=y==null||blocked(x,z,y,.28,1.65);
     if(id===undefined&&!invalid){id=NAV.nodes.length;NAV.lookup.set(key,id);NAV.nodes.push({id,ix,iz,level,x,y,z,edges:[],kind:classifyTerrain(x,z,y),mud:inSwamp(x,z)})}
     if(id!==undefined){const n=NAV.nodes[id];n.disabled=invalid;if(y!=null)n.y=y;changed.push(n)}
@@ -2778,7 +2869,7 @@ function refreshDestroyedNavigation(){
   restoreSinaiLinks();NAV.flows.clear();CAV_TACTICS.dry=null;for(const b of B)b.navClock=0;
 }
 function updateDestruction(dt){
-  if(!DESTRUCTION.batch)return;
+  if(!DESTRUCTION.batch)return;DESTRUCTION.effectBudget=3;
   for(let i=0;i<8&&DESTRUCTION.wakeQueue.length&&DESTRUCTION.pool.length;i++){const r=DESTRUCTION.wakeQueue.shift(),d=wakeRubble(r,true);if(d)d.velocity.y=-.4}
   for(let i=DESTRUCTION.foliageFalls.length-1;i>=0;i--){const f=DESTRUCTION.foliageFalls[i];f.age+=dt;f.velocity.y-=9.81*dt;f.mesh.position.addScaledVector(f.velocity,dt);f.mesh.rotation.z+=f.spin*dt;const ground=getTerrainElevation(f.mesh.position.x,f.mesh.position.z)+2.3;if(f.mesh.position.y<=ground){f.mesh.position.y=ground;f.mesh.rotation.z=Math.sign(f.spin||1)*1.15;DESTRUCTION.foliageFalls.splice(i,1)}}
   let budget=2;for(const group of DESTRUCTION.dirty){DESTRUCTION.dirty.delete(group);checkStructure(group);if(--budget<=0)break}
@@ -2793,10 +2884,11 @@ function initDestruction(){
   const authored=solids.filter(m=>m.userData.structure);const batch=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:0xffffff}),8192);batch.frustumCulled=false;batch.instanceMatrix.setUsage(THREE.DynamicDrawUsage);batch.setColorAt(0,new THREE.Color());DESTRUCTION.batch=batch;scene.add(batch);
   for(const m of authored){const tag=m.userData.structure,b=structuralBounds(m),w=b.b-b.a,h=b.hi-b.lo,l=b.e-b.c;let group=DESTRUCTION.groups.get(tag.key);if(!group){group={key:tag.key,parts:[],plates:[],foliage:tag.foliage||null,bias:{x:0,z:0}};DESTRUCTION.groups.set(tag.key,group)}
     const slab=h<.65&&w>2&&l>2,plate=slab?{bounds:b,parts:[],support:[]}:null;if(plate)group.plates.push(plate);
-    const nx=Math.ceil(w/2.6),ny=Math.ceil(h/2.2),nz=Math.ceil(l/2.6);if(m.userData.collider)disableStructuralCollider(m.userData.collider);scene.remove(m);for(const list of[solids,walls]){const index=list.indexOf(m);if(index>=0)list.splice(index,1)}
-    for(let ix=0;ix<nx;ix++)for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){if(DESTRUCTION.parts.length>=8192)throw new Error('Structural part capacity exceeded');const bounds={a:b.a+ix*w/nx,b:b.a+(ix+1)*w/nx,c:b.c+iz*l/nz,e:b.c+(iz+1)*l/nz,lo:b.lo+iy*h/ny,hi:b.lo+(iy+1)*h/ny},volume=w*h*l/(nx*ny*nz),p={id:DESTRUCTION.parts.length,bounds,x:(bounds.a+bounds.b)/2,y:(bounds.lo+bounds.hi)/2,z:(bounds.c+bounds.e)/2,mass:Math.max(20,volume*220),maxhp:tag.partition?75:tag.key.startsWith('tree:')?70:tag.key.includes('walls')||tag.key.includes('exterior')?280:slab?180:120,hp:0,alive:true,partition:tag.partition,color:m.material.color.clone(),group,plate};p.hp=p.maxhp;p.collider={...bounds,part:p};cols.push(p.collider);DESTRUCTION.parts.push(p);group.parts.push(p);plate?.parts.push(p);if(tag.bridgeDeck)BRIDGE_PARTS.push(p);const o=DESTRUCTION.dummy;o.position.set(p.x,p.y,p.z);o.rotation.set(0,0,0);o.scale.set(w/nx,h/ny,l/nz);o.updateMatrix();batch.setMatrixAt(p.id,o.matrix);batch.setColorAt(p.id,p.color)}m.geometry.dispose();
+    const single=!!m.userData.unit||!tag.bridgeDeck&&(slab||tag.key.startsWith('operation-house:')||tag.key.startsWith('house:')||tag.key.startsWith('sinai-'));
+    const nx=single?1:Math.ceil(w/2.6),ny=single?1:Math.ceil(h/2.2),nz=single?1:Math.ceil(l/2.6);if(m.userData.collider)disableStructuralCollider(m.userData.collider);scene.remove(m);for(const list of[solids,walls]){const index=list.indexOf(m);if(index>=0)list.splice(index,1)}
+    for(let ix=0;ix<nx;ix++)for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){if(DESTRUCTION.parts.length>=8192)throw new Error('Structural part capacity exceeded');const bounds={a:b.a+ix*w/nx,b:b.a+(ix+1)*w/nx,c:b.c+iz*l/nz,e:b.c+(iz+1)*l/nz,lo:b.lo+iy*h/ny,hi:b.lo+(iy+1)*h/ny},volume=w*h*l/(nx*ny*nz),p={id:DESTRUCTION.parts.length,bounds,x:(bounds.a+bounds.b)/2,y:(bounds.lo+bounds.hi)/2,z:(bounds.c+bounds.e)/2,mass:Math.max(20,volume*220),maxhp:tag.partition?75:tag.key.startsWith('tree:')?70:tag.key.includes('walls')||tag.key.includes('exterior')?280:slab?180:120,hp:0,alive:true,partition:tag.partition,color:m.material.color.clone(),group,plate,unit:m.userData.unit,gable:m.userData.gable};p.hp=p.maxhp;p.collider={...bounds,part:p};cols.push(p.collider);DESTRUCTION.parts.push(p);group.parts.push(p);plate?.parts.push(p);if(tag.bridgeDeck)BRIDGE_PARTS.push(p);const o=DESTRUCTION.dummy;o.position.set(p.x,p.y,p.z);o.rotation.set(0,0,0);o.scale.set(w/nx,h/ny,l/nz);o.updateMatrix();batch.setMatrixAt(p.id,o.matrix);batch.setColorAt(p.id,p.color)}m.geometry.dispose();
   }
-  batch.count=DESTRUCTION.parts.length;BRIDGE_READY=true;for(const group of DESTRUCTION.groups.values()){buildStructuralGraph(group);if(group.foliage){const top=group.parts.reduce((a,b)=>a.y>b.y?a:b);top.crown=true}}initDebrisPool();
+  batch.count=DESTRUCTION.parts.length;BRIDGE_READY=true;DESTRUCTION.parts=[];for(const group of DESTRUCTION.groups.values()){combineStructuralUnits(group);DESTRUCTION.parts.push(...group.parts);buildStructuralGraph(group);if(group.foliage){const top=group.parts.reduce((a,b)=>a.y>b.y?a:b);top.crown=true}}initDebrisPool();
 }
 
 const AIRSHIP_CRASHES=[];
@@ -2815,13 +2907,13 @@ function shatterAirship(t){
   for(let i=0;i<8;i++){const q=shipPosition(t,(i%2?1:-1)*2.2,(Math.floor(i/2)-1.5)*3.5,.8);queueWreckFragment(q.x,q.y,q.z,2.5,.6,3.1,0x403b30,180,R(-2,2),R(-2,2))}
   t.crashed=true;t.crashing=false;
 }
-function updateAirshipCrashes(dt){for(let i=AIRSHIP_CRASHES.length-1;i>=0;i--){const c=AIRSHIP_CRASHES[i],t=c.t;c.vy-=4.8*dt;t.y+=c.vy*dt;t.x=cl(t.x+Math.sin(t.hull)*2.6*dt,-60,60);t.z=cl(t.z+Math.cos(t.hull)*2.6*dt,-80,80);t.g.position.set(t.x,t.y,t.z);t.g.rotation.x+=c.pitch*dt;t.g.rotation.z+=c.roll*dt;c.smoke-=dt;if(c.smoke<=0){c.smoke=.24;const p=new THREE.Vector3(t.x+R(-3,3),t.y+9,t.z+R(-7,7));cannonImpact(p);addSmoke(p.x,p.y,p.z,2.4,0x272521,8,false)}if(t.y<=getTerrainElevation(t.x,t.z)+.8){t.y=getTerrainElevation(t.x,t.z)+.8;shatterAirship(t);AIRSHIP_CRASHES.splice(i,1)}}}
+function updateAirshipCrashes(dt){for(let i=AIRSHIP_CRASHES.length-1;i>=0;i--){const c=AIRSHIP_CRASHES[i],t=c.t;c.vy-=4.8*dt;t.y+=c.vy*dt;t.x=cl(t.x+Math.sin(t.hull)*2.6*dt,-60,60);t.z=clampWorldZ(t.z+Math.cos(t.hull)*2.6*dt,80);t.g.position.set(t.x,t.y,t.z);t.g.rotation.x+=c.pitch*dt;t.g.rotation.z+=c.roll*dt;c.smoke-=dt;if(c.smoke<=0){c.smoke=.24;const p=new THREE.Vector3(t.x+R(-3,3),t.y+9,t.z+R(-7,7));cannonImpact(p);addSmoke(p.x,p.y,p.z,2.4,0x272521,8,false)}if(t.y<=getTerrainElevation(t.x,t.z)+.8){t.y=getTerrainElevation(t.x,t.z)+.8;shatterAirship(t);AIRSHIP_CRASHES.splice(i,1)}}}
 function initWrecks(){const kill=killTank;killTank=function(t){if(t.airship){startAirshipCrash(t);return}kill(t);rememberTankWreck(t)};
   const ship=updateAirship;updateAirship=function(t,dt){const previous=t.hull;ship(t,dt);if(P.airship===t){yaw+=Math.atan2(Math.sin(t.hull-previous),Math.cos(t.hull-previous));normalizeView()}};
 }
-function drawTsarSights(ctx){
-  const t=P.tank;if(!P.alive||t?.special!=='tsar'||!t.alive)return;cam.updateMatrixWorld(true);const target=new THREE.Vector3(t.x,t.y+4.9,t.z).addScaledVector(lookDir(),220);
-  for(const [i,gun]of[t.turG,...t.extraGuns].entries()){const origin=gunWorld(t,gun),d=target.clone().sub(origin).normalize(),distance=worldHitDistance(origin,d,260),point=origin.clone().addScaledVector(d,distance).project(cam);if(point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1)continue;const x=(point.x+1)*innerWidth/2,y=(1-point.y)*innerHeight/2;ctx.strokeStyle='#fff';ctx.fillStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-9,y);ctx.lineTo(x+9,y);ctx.moveTo(x,y-9);ctx.lineTo(x,y+9);ctx.stroke();ctx.font='11px sans-serif';ctx.fillText(String(i+1),x+(i?12:-17),y-11)}
+function drawTwinGunSights(ctx){
+  const t=P.tank;if(!P.alive||!['tsar','mk1'].includes(t?.special)||!t.alive)return;cam.updateMatrixWorld(true);const target=heavyAimTarget(t,lookDir());
+  for(const [i,gun]of[t.turG,...t.extraGuns].entries()){const origin=heavyMuzzle(t,gun),d=target.clone().sub(origin).normalize(),distance=worldHitDistance(origin,d,260),point=origin.clone().addScaledVector(d,distance).project(cam);if(point.z<-1||point.z>1||Math.abs(point.x)>1||Math.abs(point.y)>1)continue;const x=(point.x+1)*innerWidth/2,y=(1-point.y)*innerHeight/2;ctx.strokeStyle='#fff';ctx.fillStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-9,y);ctx.lineTo(x+9,y);ctx.moveTo(x,y-9);ctx.lineTo(x,y+9);ctx.stroke();ctx.font='11px sans-serif';ctx.fillText(String(i+1),x+(i?12:-17),y-11)}
 }
 
 // Recorded single-shot assets supplied by the player; every emitter uses the same distance mixer.
@@ -2905,7 +2997,7 @@ function defeatSpeech(team){if(MAP===6)return'이번 전투는 패배했다. 모
 function beginVictory(winner,reason){
   if(over)return;over=true;V2.finishedReason=reason;V2.paused=true;spOn=false;resetHeldInput();document.exitPointerLock();setAmbientRunning(false);MEMORIAL.active=false;$('memorial')?.classList.add('hid');for(const id of['pause','support-ui','shop-ui','end'])$(id)?.classList.add('hid');
   Object.assign(VICTORY,{active:true,elapsed:0,winner,reason,line:winner===MY?victorySpeech(winner):defeatSpeech(MY)});const combat=[];for(const p of [...AFTERMATH.sites].reverse()){if(combat.every(q=>Math.hypot(q.x-p.x,q.z-p.z)>14))combat.push({...p,name:'격전의 흔적'});if(combat.length===3)break}
-  const points=[...combat,...FL.map(f=>({x:f.x,y:f.y,z:f.z,name:f.name})),...TRENCH_FLAGS.filter(f=>f.home===winner).map(f=>({x:f.x,y:f.y,z:f.z,name:f.name}))];VICTORY.shots=points.map((p,i)=>({focus:new THREE.Vector3(p.x,p.y+1,p.z),camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),cl(p.z+Math.cos(i*1.7)*16,-82,82)),name:p.name}));
+  const points=[...combat,...FL.map(f=>({x:f.x,y:f.y,z:f.z,name:f.name})),...TRENCH_FLAGS.filter(f=>f.home===winner).map(f=>({x:f.x,y:f.y,z:f.z,name:f.name}))];VICTORY.shots=points.map((p,i)=>({focus:new THREE.Vector3(p.x,p.y+1,p.z),camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),clampWorldZ(p.z+Math.cos(i*1.7)*16,82)),name:p.name}));
   document.body.classList.add('cinematic');$('victory-cinematic').classList.remove('hid');$('victory-cinematic').classList.toggle('defeat',winner!==MY);$('victory-title').textContent=victoryTeam(MY)+' · '+(winner===MY?'승리':'패배');$('victory-line').textContent=VICTORY.line;$('victory-outcome').textContent=(winner===MY?'전투 승리':'전투 패배')+' · 승리 진영: '+victoryTeam(winner);
   try{speechSynthesis.cancel();const speech=new SpeechSynthesisUtterance(VICTORY.line);speech.lang='ko-KR';speech.rate=.86;speech.pitch=.85;speechSynthesis.speak(speech)}catch{}
 }
@@ -2996,7 +3088,7 @@ function recoverStationaryBot(b,dt){
   if(Math.hypot(b.x-p.x,b.z-p.z)>1.2){p.x=b.x;p.z=b.z;p.time=0;return}
   if(p.time<2.2||FINAL_TACTICS.recoveryBudget<=0)return;FINAL_TACTICS.recoveryBudget--;b.cover=null;b.navClock=0;b.sc=0;
   if(b.railFrame){if(!b.railFrame.connector){b.railRecovery={until:V2.time+1.4};b.railCover=null}p.time=0;return}
-  const candidates=[];const ix=Math.round((b.x+61.5)/NAV.step),iz=Math.round((b.z+82.5)/NAV.step);
+  const candidates=[];const ix=Math.round((b.x+61.5)/NAV.step),iz=navRow(b.z);
   for(let dx=-3;dx<=3;dx++)for(let dz=-3;dz<=3;dz++)for(let level=0;level<NAV_LEVELS();level++){const id=NAV.lookup.get(navKey(ix+dx,iz+dz,level)),n=id==null?null:NAV.nodes[id];if(!n||n.disabled||!n.edges.length||Math.abs(n.y-b.y)>1.4||blocked(n.x,n.z,n.y,.32,1.76))continue;const d=Math.hypot(n.x-b.x,n.z-b.z);if(d>.5&&d<4)candidates.push({n,score:d+.12*Math.hypot(n.x-goal.x,n.z-goal.z)})}
   candidates.sort((a,c)=>a.score-c.score);const safe=candidates.find(q=>segmentWalkable(b,q.n));
   if(safe){const n=safe.n,dx=n.x-b.x,dz=n.z-b.z,len=Math.hypot(dx,dz);b.unstickGoal={x:n.x,y:n.y,z:n.z,r:.3,kind:'recovery',until:V2.time+2};move(b,dx/len*.12,dz/len*.12,.28);b.navTarget=[n.x,n.z];b.navClock=1.2}
@@ -3035,7 +3127,7 @@ function emergencyRedeploy(){
   if(P.tank)exitTank();dismount();if(P.airship)leaveAirship();P.railFrame=null;P.trainCar=null;P.combatRoll=null;P.vault=null;
   if(V2.phase!=='final'){if(P.alive)hurt(P,100000,{team:-1},1);if(V2.pending){beginFinalBattle(V2.pending)}else respawnP();}
   else if(MAP===5&&RAIL.finalMode==='train'&&MY===V2.defender){const flag=activeFlags().find(f=>!f.secured)||activeFlags()[0];placeRailCrew(P,flag.trainCar,0)}
-  else{const home=MY===V2.defender?activeFlags().find(f=>!f.secured):null,tx=home?.x||0,tz=home?.z??(MY?76:-76),ty=home?.y??(MAP>=4?HI:0),nodes=NAV.nodes.filter(n=>!n.disabled&&n.edges.length&&Math.abs(n.y-ty)<1.5&&Math.abs(groundAt(n.x,n.z,n.y)-n.y)<.4&&!blocked(n.x,n.z,n.y,.35,1.76));nodes.sort((a,b)=>Math.hypot(a.x-tx,a.z-tz)-Math.hypot(b.x-tx,b.z-tz));const n=nodes.find(n=>!nearbyActors(n.x,n.z,5).some(e=>e.alive&&e.team!==MY))||nodes[0];if(n){P.x=n.x;P.y=n.y;P.z=n.z}}
+  else{const home=MY===V2.defender?activeFlags().find(f=>!f.secured):null,tx=home?.x||0,tz=home?.z??rearZ(MY?76:-76),ty=home?.y??(MAP>=4?HI:0),nodes=NAV.nodes.filter(n=>!n.disabled&&n.edges.length&&Math.abs(n.y-ty)<1.5&&Math.abs(groundAt(n.x,n.z,n.y)-n.y)<.4&&!blocked(n.x,n.z,n.y,.35,1.76));nodes.sort((a,b)=>Math.hypot(a.x-tx,a.z-tz)-Math.hypot(b.x-tx,b.z-tz));const n=nodes.find(n=>!nearbyActors(n.x,n.z,5).some(e=>e.alive&&e.team!==MY))||nodes[0];if(n){P.x=n.x;P.y=n.y;P.z=n.z}}
   if(over)return false;P.vy=0;P.stance=0;P.crouch=false;P.eye=1.65;P.hc=1.1;P.hr2=.3;P.redeployAfter=V2.time+15;pitch=0;roll=pOff=shake=0;yaw=Number.isFinite(yaw)?yaw:MY?0:Math.PI;cam.position.set(P.x,P.y+P.eye,P.z);resetHeldInput();rebuildActors();requestBattleLock();msg('안전 위치로 재배치 완료');return true;
 }
 function initExternalMusicLinks(){const tracks=[['The Great War Main Theme',0],['Tannenberg Main Theme',164],['BF1 · Mud and Blood',723],['BF1 · Metal Frenzy',1028],['BF1 · Russian Dirge',1927],['Hearts of Iron IV · The End of the War',3494]];const box=document.createElement('details');box.className='external-music';box.innerHTML='<summary>추가 전투 음악 6곡 · YouTube에서 듣기</summary><p>원본 영상의 해당 구간을 새 탭에서 엽니다. 인터넷 연결 필요.</p>'+tracks.map(([name,time])=>'<a href="https://www.youtube.com/watch?v=LnX2dWVIE1E&t='+time+'s" target="_blank" rel="noopener noreferrer">'+name+'</a>').join('');$('menu').insertBefore(box,$('go'));box.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('a')){musicPref.enabled=false;stopBattleMusic();syncMusicUI()}})}
@@ -3092,15 +3184,15 @@ function repairSoldierAI(b,dt,old){const c=b.railRepairTarget;if(!c){old(b,dt);r
 function railTargetSurface(car,observer){const p=railLocal(car,observer);let x=cl(p.x,-3.8,3.8),z=cl(p.z,-4.8,4.8);if(Math.abs(p.x)/4>Math.abs(p.z)/5){x=Math.sign(p.x||1)*4.15;if(Math.abs(z)<2.1)z=(p.z>=0?1:-1)*3.4}else{z=Math.sign(p.z||1)*5.15;if(Math.abs(x)<1.8)x=(p.x>=0?1:-1)*2.8}return railWorld(car,x,z,.55)}
 function updateTrainHunter(t,dt){const previous={x:t.x,z:t.z,hull:t.hull};t.railScan=(t.railScan||0)-dt;
   if(t.railScan<=0||!t.railAttackTarget||t.railAttackTarget.disabled){t.railScan=.8;t.railAttackTarget=RAIL.cars.filter(c=>c.team!==t.team&&!c.disabled).sort((a,b)=>Math.hypot(a.x-t.x,a.z-t.z)-(a.cannon?8:0)-Math.hypot(b.x-t.x,b.z-t.z)+(b.cannon?8:0))[0]||null}
-  const c=t.railAttackTarget;if(!c)return false;t.railHunter=true;t.reloadSeconds=5.5;t.cd=Math.max(0,t.cd-dt);t.postClock=(t.postClock||0)-dt;
+  const c=t.railAttackTarget;if(!c)return false;t.railHunter=true;t.reloadSeconds=4.1;t.cd=Math.max(0,t.cd-dt);t.postClock=(t.postClock||0)-dt;
   if(!t.railPost||t.postClock<=0){t.postClock=3;t.railPost=pickRailFirePost(t,c)}
-  const aim=railTargetSurface(c,t),distance=Math.hypot(aim.x-t.x,aim.z-t.z),post=t.railPost,travel=Math.hypot(post.x-t.x,post.z-t.z),aimHeading=Math.atan2(aim.x-t.x,aim.z-t.z),desired=travel>1.2?Math.atan2(post.x-t.x,post.z-t.z):aimHeading,turn=Math.atan2(Math.sin(desired-t.hull),Math.cos(desired-t.hull));t.hull+=cl(turn,-.8*dt,.8*dt);t.tur=t.hull;
+  const aim=railTargetSurface(c,t),distance=Math.hypot(aim.x-t.x,aim.z-t.z),post=t.railPost,travel=Math.hypot(post.x-t.x,post.z-t.z),aimHeading=Math.atan2(aim.x-t.x,aim.z-t.z),desired=travel>1.2?Math.atan2(post.x-t.x,post.z-t.z):aimHeading,turn=Math.atan2(Math.sin(desired-t.hull),Math.cos(desired-t.hull));t.hull+=cl(turn,-.56*dt,.56*dt);t.tur=t.hull;
   if(Math.abs(turn)<.35&&travel>1.2&&!(t.trainPushUntil>V2.time))moveTank(t,Math.sin(t.hull)*Math.min(t.sp*dt,travel),Math.cos(t.hull)*Math.min(t.sp*dt,travel));else t.mv=0;
   tankY(t,dt);syncTank(t);guardTankTrainPose(t,previous);const o=new THREE.Vector3(t.x,t.y+2.1,t.z),d=ballisticAim(o,aim,t,1),muzzle=o.clone().addScaledVector(d,t.len*.6),alignment=Math.abs(Math.atan2(Math.sin(aimHeading-t.hull),Math.cos(aimHeading-t.hull)));
-  if(distance<110&&alignment<.14&&t.cd<=0&&!attackRestricted(t.team,c)&&inAIView(o,aim,t.hull,110)&&!smokeObscures(o,c)&&los(muzzle,aim)){tankFire(t,d);t.cd=5.5;t.railShots=(t.railShots||0)+1}return true;
+  if(distance<110&&alignment<.14&&t.cd<=0&&!attackRestricted(t.team,c)&&inAIView(o,aim,t.hull,110)&&!smokeObscures(o,c)&&los(muzzle,aim)){tankFire(t,d);t.railShots=(t.railShots||0)+1}return true;
 }
 function seedTrainHunters(){if(MAP!==5)return;let need=2-tanks.filter(t=>t.alive&&t.team===1&&!t.airship&&!t.playerOwned).length;
-  for(const z of[52,43,34])for(const x of[-54,54,-36,36]){if(need<=0)return;const y=getTerrainElevation(x,z);if(!hunterTrackSafe({wd:2.5,len:5.6,hull:Math.PI},x,z)||blocked(x,z,y,2.5,3)||tankTrainContact({x,y,z,hull:Math.PI,wd:2.5,len:5.6})||tanks.some(t=>Math.hypot(t.x-x,t.z-z)<9))continue;const t=mkTank('a7v',1,x,z);t.railHunter=true;t.reloadSeconds=5.5;need--}
+  for(const z of[52,43,34])for(const x of[-54,54,-36,36]){if(need<=0)return;const y=getTerrainElevation(x,z);if(!hunterTrackSafe({wd:2.5,len:5.6,hull:Math.PI},x,z)||blocked(x,z,y,2.5,3)||tankTrainContact({x,y,z,hull:Math.PI,wd:2.5,len:5.6})||tanks.some(t=>Math.hypot(t.x-x,t.z-z)<9))continue;const t=mkTank('a7v',1,x,z);t.railHunter=true;t.reloadSeconds=4.1;need--}
 }
 function configureObservationBalloon(t){const envelope=t.g.getObjectByName('envelope');if(!envelope)return;t.observationBalloon=true;t.len=18;t.wd=18;t.hr2=81;envelope.scale.set(9,9,9);
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const a=canvas.getContext('2d');a.fillStyle='#b7b09b';a.fillRect(0,0,512,256);for(const x of[128,384]){a.fillStyle='#a52228';a.beginPath();a.arc(x,128,55,0,Math.PI*2);a.fill();a.fillStyle='#f2cd61';a.font='bold 76px "Segoe UI Symbol",sans-serif';a.textAlign='center';a.textBaseline='middle';a.fillText('☭',x,130)}envelope.material=new THREE.MeshLambertMaterial({color:0xffffff,map:new THREE.CanvasTexture(canvas)});
@@ -3133,7 +3225,7 @@ function pickRailFirePost(t,car){const here=railTrackInfo(t.x,t.z),side=(t.x-her
   for(const offset of[0,2,-2,5,-5,9,-9,14,-14]){const q=RAIL.trackSamples[(here.index+offset+180)%180];for(const distance of[11,15,20]){const x=q.x+q.nx*side*distance,z=q.z+q.nz*side*distance,y=getTerrainElevation(x,z);if(Math.abs(x)>59||Math.abs(z)>54||!hunterTrackSafe(t,x,z,Math.atan2(x-t.x,z-t.z))||blocked(x,z,y,2.2,3)||!hunterRouteClear(t,x,z))continue;const range=Math.hypot(x-car.x,z-car.z),travel=Math.hypot(x-t.x,z-t.z),value=Math.abs(range-32)+travel*.5;if(value<score){score=value;best={x,y,z}}}}
   return best||{x:t.x,y:t.y,z:t.z};
 }
-function trainPushPoseFree(t,x,z,theta){if(Math.abs(x)>62||Math.abs(z)>82)return false;const y=getTerrainElevation(x,z);if(Math.abs(y-t.y)>1.6||tankTrainContact(t,x,z,t.hull,theta))return false;const size=tankFootprint(t),hx=Math.abs(size.x.x)*size.halfX+Math.abs(size.z.x)*size.halfZ,hz=Math.abs(size.x.z)*size.halfX+Math.abs(size.z.z)*size.halfZ;for(const c of nearbyCols(x,z,Math.max(hx,hz))){if(c===t.wreckCollider||c.disabled)continue;if(x+hx>c.a&&x-hx<c.b&&z+hz>c.c&&z-hz<c.e&&c.hi-y>.6&&c.lo<y+2.5)return false}return true}
+function trainPushPoseFree(t,x,z,theta){if(Math.abs(x)>62||!inWorldZ(z,82))return false;const y=getTerrainElevation(x,z);if(Math.abs(y-t.y)>1.6||tankTrainContact(t,x,z,t.hull,theta))return false;const size=tankFootprint(t),hx=Math.abs(size.x.x)*size.halfX+Math.abs(size.z.x)*size.halfZ,hz=Math.abs(size.x.z)*size.halfX+Math.abs(size.z.z)*size.halfZ;for(const c of nearbyCols(x,z,Math.max(hx,hz))){if(c===t.wreckCollider||c.disabled)continue;if(x+hx>c.a&&x-hx<c.b&&z+hz>c.c&&z-hz<c.e&&c.hi-y>.6&&c.lo<y+2.5)return false}return true}
 function movePushedWreckCollider(t,dx,dy,dz){const c=t.wreckCollider;if(!c)return;for(let x=Math.floor(c.a/CELL);x<=Math.floor(c.b/CELL);x++)for(let z=Math.floor(c.c/CELL);z<=Math.floor(c.e/CELL);z++){const key=x+','+z,list=STATIC_GRID.get(key),i=list?.indexOf(c);if(i>=0)list.splice(i,1);DESTRUCTION.navDirty.add(key)}c.a+=dx;c.b+=dx;c.c+=dz;c.e+=dz;c.lo+=dy;c.hi+=dy;for(let x=Math.floor(c.a/CELL);x<=Math.floor(c.b/CELL);x++)for(let z=Math.floor(c.c/CELL);z<=Math.floor(c.e/CELL);z++){const key=x+','+z;if(!STATIC_GRID.has(key))STATIC_GRID.set(key,[]);STATIC_GRID.get(key).push(c);DESTRUCTION.navDirty.add(key)}}
 function pushTanksFromTrain(theta){if(MAP!==5)return;for(const t of new Set([...tanks,...DESTRUCTION.wrecks])){if(t.airship||!t.g?.parent)continue;const hit=tankTrainContact(t,t.x,t.z,t.hull,theta);if(!hit)continue;let destination=null;
     for(const extra of[.12,.5,1,2,4]){const x=t.x-hit.x*(hit.depth+extra),z=t.z-hit.z*(hit.depth+extra);if(trainPushPoseFree(t,x,z,theta)){destination={x,z};break}}
@@ -3174,7 +3266,7 @@ function wakeRubble(r,forced=false){
 function queueRubbleFall(r){if(r.active||r.queued)return;r.support=null;r.queued=true;DESTRUCTION.wakeQueue.push(r)}
 function rubbleOverlap(a,b){return Math.max(0,Math.min(a.b,b.b)-Math.max(a.a,b.a))*Math.max(0,Math.min(a.e,b.e)-Math.max(a.c,b.c))*Math.max(0,Math.min(a.hi,b.hi)-Math.max(a.lo,b.lo))}
 function rubbleCanSlide(d,x,z){
-  if(Math.abs(x)>63||Math.abs(z)>84)return false;const from=rubbleBounds(d),dx=x-d.position.x,dz=z-d.position.z,to={a:from.a+dx,b:from.b+dx,c:from.c+dz,e:from.e+dz,lo:from.lo+.045,hi:from.hi-.045};
+  if(Math.abs(x)>63||!inWorldZ(z,84))return false;const from=rubbleBounds(d),dx=x-d.position.x,dz=z-d.position.z,to={a:from.a+dx,b:from.b+dx,c:from.c+dz,e:from.e+dz,lo:from.lo+.045,hi:from.hi-.045};
   for(const c of nearbyCols(x,z,Math.max(to.b-to.a,to.e-to.c)/2+.1)){if(c.disabled||c.pushable)continue;if(rubbleOverlap(to,c)>rubbleOverlap(from,c)+.0005)return false}
   // Ordinary walls and the moving train remain solid; rubble never cuts through them.
   if(MAP===5){const r=Math.min(.65,Math.max(d.scale.x,d.scale.z)*.3);if(railBlocked(x,z,to.lo,r,Math.max(.1,to.hi-to.lo))&&!railBlocked(d.position.x,d.position.z,from.lo,r,Math.max(.1,from.hi-from.lo)))return false}return true;
@@ -3312,14 +3404,19 @@ function initUnitSystem(){
   const ud=updateDestruction;updateDestruction=function(dt){ud(dt);ejectAcc+=dt;if(ejectAcc>=.1){ejectFromWrecks(ejectAcc);ejectAcc=0}};
 }
 // ---- Two-storey buildings: stairs graph, window garrisons ----
-function restoreSinaiLinks(){if(!NAV.extraLinks)return;for(const [a,c]of NAV.extraLinks){if(!a.edges.some(([j])=>j===c.id))a.edges.push([c.id,navLinkCost(a,c)]);if(!c.edges.some(([j])=>j===a.id))c.edges.push([a.id,navLinkCost(c,a)])}}
+function restoreSinaiLinks(){if(!NAV.extraLinks)return;
+  for(const group of NAV.extraGroups||[]){
+    for(const node of group.nodes)node.disabled=Math.abs(groundAt(node.x,node.z,node.y)-node.y)>.36;
+    if(group.nodes.some(n=>n.disabled))group.house.ok=false;
+  }
+  for(const [a,c]of NAV.extraLinks){if(a.disabled||c.disabled){a.edges=a.edges.filter(([j])=>j!==c.id);c.edges=c.edges.filter(([j])=>j!==a.id);continue}if(!a.edges.some(([j])=>j===c.id))a.edges.push([c.id,navLinkCost(a,c)]);if(!c.edges.some(([j])=>j===a.id))c.edges.push([a.id,navLinkCost(c,a)])}}
 function navLinkCost(a,c){return Math.max(.05,Math.hypot(a.x-c.x,a.z-c.z,a.y-c.y))*(TERRAIN_CLASS[a.kind].cost+TERRAIN_CLASS[c.kind].cost)*.5}
 function installSinaiUpper(){
   if(MAP!==6)return;NAV.extras=[];NAV.extraGroups=[];NAV.extraLinks=[];
   const top=HI+3.8,n=13,hh=3.8/n;
   const link=(a,c)=>{NAV.extraLinks.push([a,c])};
   const mk=(x,y,z)=>{const node={id:NAV.nodes.length,ix:-1,iz:-1,level:y>HI+1.4?1:0,x,y,z,edges:[],kind:'building',mud:false,extra:true};NAV.nodes.push(node);NAV.extras.push(node);return node};
-  const near=(x,y,z,level,radius)=>{const out=[];const ix=Math.round((x+61.5)/NAV.step),iz=Math.round((z+82.5)/NAV.step),r=Math.ceil(radius/NAV.step);for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){const id=NAV.lookup.get(navKey(ix+dx,iz+dz,level));if(id===undefined)continue;const m=NAV.nodes[id];if(m.disabled||Math.hypot(m.x-x,m.z-z)>radius||Math.abs(m.y-y)>1.4)continue;out.push(m)}return out.sort((p,q)=>Math.hypot(p.x-x,p.z-z)-Math.hypot(q.x-x,q.z-z))};
+  const near=(x,y,z,level,radius)=>{const out=[];const ix=Math.round((x+61.5)/NAV.step),iz=navRow(z),r=Math.ceil(radius/NAV.step);for(let dx=-r;dx<=r;dx++)for(let dz=-r;dz<=r;dz++){const id=NAV.lookup.get(navKey(ix+dx,iz+dz,level));if(id===undefined)continue;const m=NAV.nodes[id];if(m.disabled||Math.hypot(m.x-x,m.z-z)>radius||Math.abs(m.y-y)>1.4)continue;out.push(m)}return out.sort((p,q)=>Math.hypot(p.x-x,p.z-z)-Math.hypot(q.x-x,q.z-z))};
   for(const h of SINAI_HOUSES){
     h.ok=false;h.dead=false;if(h.x+13.8>61.5)continue;
     const chain=[],gy=getTerrainElevation(h.x+13.7,h.z);const G=mk(h.x+13.7,gy,h.z);chain.push(G);
@@ -3332,7 +3429,7 @@ function installSinaiUpper(){
     const fy=h.sg>0?0:Math.PI,face=-h.sg>0?0:Math.PI;
     h.posts=[[-2.1,-h.sg*2.65,face],[2.1,-h.sg*2.65,face],[-3.05,0,-Math.PI/2]].map(([dx,dz,yaw])=>({x:h.x+dx,y:top,z:h.z+dz,r:.38,kind:'overwatch',direct:true,yaw,occ:null}));
     h.garrison={x:D.x,y:top,z:D.z,r:2.4,kind:'trench',garrison:true};
-    NAV.extraGroups.push({a:h.x+1.5,b:h.x+15.2,c:h.z-3,e:h.z+3,nodes:chain});
+    NAV.extraGroups.push({a:h.x+1.5,b:h.x+15.2,c:h.z-3,e:h.z+3,nodes:chain,house:h});
   }
   restoreSinaiLinks();
   if(!NAV.nnWrapped){NAV.nnWrapped=true;const nn=nearestNav;nearestNav=function(x,y,z,rings=4){const g=nn(x,y,z,rings);if(!NAV.extraGroups?.length)return g;let best=g,dist=Infinity;if(g>=0){const q=NAV.nodes[g],dy=Math.abs(q.y-y);dist=(q.x-x)**2+(q.z-z)**2+dy*dy*3}
@@ -3416,8 +3513,8 @@ function sinaiHouse(x,z,key){SINAI_HOUSES.push({x,z,sg:z<0?-1:1,key});
     wall('z',-w/2,d/2,[[-.8,.8,.9,2.2]],y0);wall('z',w/2,d/2,f===1?door:[[-.8,.8,.9,2.2]],y0);
     if(f===0)addBox(w+.6,.4,d+.6,c2,x,HI+FH,z);}
   addBox(w+.6,.4,d+.6,c2,x,HI+2*FH+.4,z);
-  markStructureRange(start,key);
-  const n=13,hh=(FH+.4)/n;for(let i=0;i<n;i++)addBox(.7,(i+1)*hh,1.8,0x8d7650,x+w/2+.25+.35+(n-1-i)*.7,HI,z);
+  const n=13,hh=(FH+.4)/n;for(let i=0;i<n;i++)addBox(.7,(i+1)*hh,1.8,0x8d7650,x+w/2+.25+.35+(n-1-i)*.7,HI,z).userData.unit='stair:outside:'+Math.floor(i/7);
+  markHouseRange(start,key,x,z,w,d);
 }
 function sinaiRock(x,z,s,key){
   const start=solids.length;addBox(11*s,4,9*s,0x9a805a,x,HI,z);addBox(8*s,4,6.5*s,0x8b7350,x+s,HI+4,z-.5*s);addBox(5*s,3.5,4*s,0xa68b63,x+.5*s,HI+8,z);
@@ -3431,10 +3528,10 @@ function prepareSinai(){
   const sr=soldierRig;soldierRig=function(team,elite,type,nation){if(nation===undefined)nation=team===0?((type==='lmg'||type==='hmg')?'british':'arab'):(Math.random()<.15?'german':'ottoman');return sr(team,elite,type,nation)};
   MUSIC_THEMES[6]={name:'사막의 메아리',bpm:92,lead:'horn',pad:'strings',chords:[[38,50,53,57],[39,51,55,58],[38,50,53,57],[36,48,51,55]],melody:[62,63,66,null,67,66,63,62,null,60,62,63,66,null,63,62]};
   SP[6]={0:['형제들이여, 사막은 우리의 땅이다! 마을을 지키고 오스만의 진지를 하나씩 빼앗아라!','영국 기관총 분대가 우리를 엄호한다. 소총은 느리지만 한 발 한 발 신중히 쏴라!'],1:['시나이의 마을을 사수하라! 반란군은 수가 많지만 총은 낡았다. 기관총 진지를 지켜라!','흙벽 건물을 요새로 삼고 거점을 지켜라. 지원군이 곧 도착한다!']};
-  for(const sg of[-1,1]){plane(130,25,HI,sg*72.5,0xc4a870);
-    for(const x of[-40,0,40]){sinaiHouse(x-9.5,sg*79,'sinai-v'+sg+'-'+x+'-a');sinaiHouse(x+9.5,sg*79,'sinai-v'+sg+'-'+x+'-b');TANNENBERG.villages.push({x,y:HI,z:sg*79,team:sg>0?1:0});TACTICAL_ZONES.push({type:'trench',name:'마을 진지',x,y:HI,z:sg*79,r:9})}
+  for(const sg of[-1,1]){plane(130,25,HI,rearZ(sg*72.5),0xc4a870);
+    for(const x of[-40,0,40]){sinaiHouse(x-9.5,rearZ(sg*79),'sinai-v'+sg+'-'+x+'-a');sinaiHouse(x+9.5,rearZ(sg*79),'sinai-v'+sg+'-'+x+'-b');TANNENBERG.villages.push({x,y:HI,z:rearZ(sg*79),team:sg>0?1:0});TACTICAL_ZONES.push({type:'trench',name:'마을 진지',x,y:HI,z:rearZ(sg*79),r:9})}
     for(const [i,x]of[-54,-44,-32,-20,-8,8,20,32,44,54].entries()){
-      const front=62+(i%2)*3,z=sg*(front+1);addBox(3.2,.6,1.6,0x9a835a,x,HI,z);addBox(4,.85,.7,0xb59c6c,x,HI,sg*(front-.3));
+      const front=rearDepth(sg)+62+(i%2)*3,z=sg*(front+1);addBox(3.2,.6,1.6,0x9a835a,x,HI,z);addBox(4,.85,.7,0xb59c6c,x,HI,sg*(front-.3));
       for(const [dx,dz]of[[-.9,-.3],[0,-.3],[.9,-.3],[-.5,.35],[.5,.35]])DEFENSE_POSTS.push({x:x+dx,y:HI+.6,z:z+sg*dz,r:.38,kind:'post',home:sg>0?1:0,sg,entry:{x:x+dx,y:HI,z:sg*(front+3.1),r:.4,kind:'post-entry'}})}}
   [[-22,-47],[4,-50],[-4,47],[20,49]].forEach(([x,z],i)=>sinaiHouse(x,z,'sinai-m'+i));
   [[-52,-10,1],[-22,-30,1.2],[24,-30,1],[50,-18,1.1],[-30,16,1.2],[-48,34,1],[34,40,1.1],[52,24,1],[-6,14,1]].forEach(([x,z,s],i)=>sinaiRock(x,z,s,'sinai-rock'+i));
@@ -3622,7 +3719,7 @@ function buildMainLandscape(){
       if(track.some(p=>Math.hypot(x-p.x,z-p.z)<12))continue;
       const start=solids.length;for(const dx of[-3,3])addBox(.5,2.8,6,0x745642,x+dx,HI,z);
       addBox(6,2.8,.5,0x69503f,x,HI,z+3);addBox(6.8,.45,6.8,0xdfe6e8,x,HI+2.8,z);
-      markStructureRange(start,'operation-house:rail'+x);
+      markHouseRange(start,'operation-house:rail'+x,x,z,6,6);
     }
     sculptFront(id,2);return;
   }
@@ -3643,7 +3740,7 @@ function buildThemedOuter(){
  solids.length=cols.length=walls.length=REG.length=HILLS.length=SWAMPS.length=FIRING_STEPS.length=0;
  const rnd=opRandom(OP_BOOT.seed+scenario*701+variant*199),snow=scenario===5||scenario===7,sand=scenario===6,dead=scenario===1||scenario===3;
  const ground=snow?0xd9e4ec:sand?0xd8b67d:dead?0x403b34:scenario===2?0x79825a:0x516047;
- plane(130,120,HI,0,ground);plane(130,25,0,72.5,snow?0xc3d2dc:sand?0xc6a46b:0x514332);plane(130,25,0,-72.5,snow?0xc3d2dc:sand?0xc6a46b:0x514332);buildZigzagTrenches();
+ plane(130,120,HI,0,ground);plane(130,25,0,rearZ(72.5),snow?0xc3d2dc:sand?0xc6a46b:0x514332);plane(130,25,0,rearZ(-72.5),snow?0xc3d2dc:sand?0xc6a46b:0x514332);buildZigzagTrenches();
  const kind=theme[1];
  const hill=(x,z,r,h)=>{HILLS.push({x,z,r,h});const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,16),M(snow?0xe0e9ef:sand?0xb48b59:dead?0x4c4740:0x69714c));m.position.set(x,HI+h/2,z);scene.add(m);solids.push(m)};
  if(['ridge','mountain','dunes','crater','forest'].includes(kind)){
@@ -3664,13 +3761,13 @@ function buildThemedOuter(){
   const start=solids.length,y=getTerrainElevation(x,z),w=7+(i%2),d=6,h=3.4+(kind==='town'&&i%3===0?2:0),wood=snow||scenario===4,col=wood?0x70543e:sand?0xc6aa7e:dead?0x777066:0xc6bca7;
   addBox(.35,h,d,col,x-w/2,y,z);addBox(.35,h,d,col,x+w/2,y,z);
   for(const sg of[-1,1]){for(const dx of[-w/2+1,w/2-1])addBox(2,h,.35,col,x+dx,y,z+sg*d/2);addBox(w-4,h-2.5,.35,col,x,y+2.5,z+sg*d/2)}
-  addBox(w+.45,.25,d+.45,snow?0xe4ecf1:sand?0xb19471:0x66534a,x,y+h,z);
+  const roof=addBox(w+.45,.25,d+.45,snow?0xe4ecf1:sand?0xb19471:0x66534a,x,y+h,z);
   if(wood||kind==='town'){
+   roof.userData.gable=addGable(x,y+h+.25,z,w+.45,d+.45,1.15,snow?0xe4ecf1:0x58463d);
    for(const dx of[-w/2,w/2])addBox(.18,h,.42,0x3b3028,x+dx,y,z+d/2+.05);
-   for(let k=0;k<5;k++)addBox((w+.8)*(1-k/5),.25,d+.8,snow?0xe5eef5:0x58463d,x,y+h+.25+k*.25,z);
   }
   if(kind==='ruins'||kind==='crater')addBox(1.1,1.5,1.2,0x655b4f,x+5,y,z+2);
-  markStructureRange(start,'operation-house:'+i);
+  markHouseRange(start,'operation-house:'+i,x,z,w,d);
   reg('building',snow?'설원 목조 오두막':kind==='town'?'목골 가옥':'전초 가옥',x,z,6,{house:true,hx:w/2,hz:d/2});
   OUTER_LAYOUT.interiors.push({x,z,y,a:x-w/2+.3,b:x+w/2-.3,c:z-d/2+.3,e:z+d/2-.3});
  }
@@ -3683,14 +3780,8 @@ function buildThemedOuter(){
  if(kind==='forest'||kind==='marsh'||scenario===4){for(let i=0;i<30;i++){const x=(i%2?1:-1)*(19+rnd()*37),z=-48+rnd()*96;if(REG.some(g=>g.house&&Math.hypot(x-g.x,z-g.z)<8))continue;tree(x,z)}}
  for(let i=0;i<24;i++){const x=(i%2?1:-1)*(10+rnd()*42),z=-48+rnd()*96;if(REG.some(g=>g.house&&Math.hypot(x-g.x,z-g.z)<7))continue;addBox(1.5+rnd(),.65+rnd()*.35,.9,snow?0x88969c:sand?0xa58c67:0x685d49,x,getTerrainElevation(x,z),z)}
  buildSectorLandmark(kind,scenario);
- const layouts=[
-   [[-15,-36],[16,-4],[-8,30]],
-   [[-22,-45],[18,-35],[-36,-18],[5,-9],[28,8],[-19,17],[34,32],[-7,46]],
-   [[15,-39],[-22,-16],[4,8],[24,31]],
-   [[-14,-42],[22,-24],[-13,-1],[14,20],[-5,40]]
- ];
  // Mirror the lateral approach by theatre while keeping the sectors contiguous in depth.
- OUTER_LAYOUT.flags=layouts[variant].map(([x,z],i)=>[
+ OUTER_LAYOUT.flags=OUTER_FLAG_ROWS[variant].map(([x,z],i)=>[
    (scenario%2?x:-x)+Math.round(5*Math.sin(scenario*1.7+i*1.3)),
    z+Math.round(3*Math.cos(scenario*.85+i))
  ]);
@@ -3718,7 +3809,7 @@ function createOperationFlags(){if(!OP_OUTER)return false;
   if(indoor)f.indoorBounds={...layout.indoor};
   FL.push(f);
  }
- for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'북':'남')+(i+1),'후방 진지',x,0,(team?1:-1)*79.5,4.5,'trench',team));return true;
+ for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'북':'남')+(i+1),'후방 진지',x,0,rearZ((team?1:-1)*79.5),4.5,'trench',team));return true;
 }
 function decorateRegions(root,id){
   const panels={6:[0,0],5:[2,0],4:[4,0],2:[0,2],1:[2,2],7:[4,2]};
@@ -3927,7 +4018,7 @@ function installFrontWeather(){
  rifleButton.textContent='대전차 소총 · 100P';
  rifleButton.onclick=()=>{
    if(V2.overlay!=='shop'||EXP.shopTab!=='guns'||!P.alive||PP<100)return;
-   const nodes=NAV.nodes.filter(n=>n.level===0&&Math.abs(n.z)>65&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
+   const nodes=NAV.nodes.filter(n=>n.level===0&&atBase(n.z,65)&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
    const site=nodes.reduce((best,n)=>!best||Math.hypot(n.x-P.x,n.z-P.z)<Math.hypot(best.x-P.x,best.z-P.z)?n:best,null);
    if(!site){toast('아군 참호 보급 지점을 찾을 수 없습니다');return}
    PP-=100;
@@ -4022,7 +4113,7 @@ function releaseFromTank(e,r,list){
  for(const t of list){const hit=soldierTankContact(e,e.x,e.z,r,t);if(!hit)continue;
  const c=Math.cos(t.hull),s=Math.sin(t.hull),u=(e.x-t.x)*c-(e.z-t.z)*s,v=(e.x-t.x)*s+(e.z-t.z)*c;
  const candidates=[[hit.x,hit.z,hit.depth],[c,-s,(t.wd||3)/2+.16+r-u],[-c,s,(t.wd||3)/2+.16+r+u],[s,c,(t.len||5)/2+.16+r-v],[-s,-c,(t.len||5)/2+.16+r+v]];
- for(const [nx,nz,length] of candidates){if(length<=0)continue;const n=Math.ceil(length/.2);let clear=true;for(let i=1;i<=n;i++){const x=e.x+nx*length*i/n,z=e.z+nz*length*i/n;if(Math.abs(x)>62||Math.abs(z)>83||blocked(x,z,e.y,r,bodyHeight(e))){clear=false;break}}if(!clear)continue;
+ for(const [nx,nz,length] of candidates){if(length<=0)continue;const n=Math.ceil(length/.2);let clear=true;for(let i=1;i<=n;i++){const x=e.x+nx*length*i/n,z=e.z+nz*length*i/n;if(Math.abs(x)>62||!inWorldZ(z)||blocked(x,z,e.y,r,bodyHeight(e))){clear=false;break}}if(!clear)continue;
  const x=e.x+nx*length,z=e.z+nz*length;if(list.some(other=>soldierTankContact(e,x,z,r,other)))continue;e.x=x;e.z=z;changed=true;break}
  }if(!changed)break}
 }
@@ -4074,7 +4165,7 @@ function constrainTankTravel(e,ox,oz,r,list){
     if(!distinct.length)distinct.push({x:0,y:groundAt(0,0,HI)+1,z:0,name:regionName});
     VICTORY.shots=distinct.map((p,i)=>({
       focus:new THREE.Vector3(p.x,p.y+1,p.z),
-      camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),cl(p.z+Math.cos(i*1.7)*16,-82,82)),
+      camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),clampWorldZ(p.z+Math.cos(i*1.7)*16,82)),
       name:p.name
     }));
     Object.assign(VICTORY,{active:true,elapsed:0,duration:16,winner,reason:headline,line:headline});
@@ -4127,7 +4218,7 @@ function constrainTankTravel(e,ox,oz,r,list){
     5:{0:['ft','sc'],1:['a7v','airship']},
     6:{0:['ft','mk1','airship'],1:['a7v']}
   };
-  const vehicleRoles={mk1:'영국 중전차 · 좌우 돌출포 2문',ft:'경전차 · 기동 지원',sc:'돌격전차 · 보병 지원',fcm:'초중전차 · 15초 주포 장전',tsar:'다포탑 중전차 · 차르 전차',a7v:'중전차 · 기관총 다포탑',airship:'공중 정찰 · 선원 기총사격'};
+  const vehicleRoles={mk1:'영국 중전차 · 좌우 돌출포 2문',ft:'경전차 · 기동 지원',sc:'돌격전차 · 보병 지원',fcm:'초중전차 · 11초 주포 장전',tsar:'다포탑 중전차 · 차르 전차',a7v:'중전차 · 기관총 다포탑',airship:'공중 정찰 · 선원 기총사격'};
   function syncVehicleCatalog(){
     for(const [id,name]of Object.entries(baseVehicleNames))if(TT[id])TT[id].n=name;
     if(STORY_MAP===5){TT.a7v.n='멘델레예프 전차';TT.airship.n='관측 열기구'}
@@ -4152,7 +4243,7 @@ function constrainTankTravel(e,ox,oz,r,list){
   GEAR.armorDrop=null;
   VAR.armor={n:'방탄복 보급품',cls:0};
   function findFriendlyTrenchSupplySite(){
-    const nodes=NAV.nodes.filter(n=>n.level===0&&Math.abs(n.z)>65&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
+    const nodes=NAV.nodes.filter(n=>n.level===0&&atBase(n.z,65)&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
     return nodes.reduce((best,n)=>!best||Math.hypot(n.x-P.x,n.z-P.z)<Math.hypot(best.x-P.x,best.z-P.z)?n:best,null);
   }
   function placeArmorSupply(){
@@ -4255,7 +4346,7 @@ function constrainTankTravel(e,ox,oz,r,list){
     if(!points.length)points.push({x:0,y:HI,z:0,name:region});
     VICTORY.shots=points.map((p,i)=>({
       focus:new THREE.Vector3(p.x,p.y+1,p.z),
-      camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),cl(p.z+Math.cos(i*1.7)*16,-82,82)),
+      camera:new THREE.Vector3(cl(p.x+Math.sin(i*1.7)*15,-59,59),MAP===3?FORT_ROOF+12:Math.max(p.y+13,20),clampWorldZ(p.z+Math.cos(i*1.7)*16,82)),
       name:p.name
     }));
     Object.assign(VICTORY,{active:true,elapsed:0,duration:18,winner,reason:caption,line:caption});
@@ -4346,7 +4437,7 @@ function constrainTankTravel(e,ox,oz,r,list){
  function buyPrototype(id){
   if(!P.alive||!roster().includes(id)||V2.overlay!=='shop')return;
   const v=VAR[id],cost=Math.max(v.cost,(P.deaths||0)-(P.kills||0));if(PP<cost)return;
-  const nodes=NAV.nodes.filter(n=>n.level===0&&Math.abs(n.z)>65&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
+  const nodes=NAV.nodes.filter(n=>n.level===0&&atBase(n.z,65)&&Math.sign(n.z)===(MY?1:-1)&&!blocked(n.x,n.z,n.y,.5));
   const p=nodes.reduce((a,b)=>!a||Math.hypot(b.x-P.x,b.z-P.z)<Math.hypot(a.x-P.x,a.z-P.z)?b:a,null);
   if(!p){toast('참호 보급 공간을 찾을 수 없습니다');return}
   PP-=cost;dropAt(p,id,{mag:v.mm,res:v.res},0,true);showDeployment(v.n,cost);refreshShop();
@@ -4540,7 +4631,7 @@ function constrainTankTravel(e,ox,oz,r,list){
    const zoneIndex=restrictedAreas.findIndex(z=>(MAP!==3||floor===z.floor)&&Math.hypot(z.x-p.x,z.z-p.z)<=z.r);
    if(mode==='공격 금지'||mode==='지우기'&&zoneIndex>=0){
      if(mode==='지우기')restrictedAreas.splice(zoneIndex,1);
-     else if(Math.abs(p.x)<=62&&Math.abs(p.z)<=83&&zoneIndex<0)restrictedAreas.push({x:p.x,z:p.z,r:12,floor});
+     else if(Math.abs(p.x)<=62&&inWorldZ(p.z)&&zoneIndex<0)restrictedAreas.push({x:p.x,z:p.z,r:12,floor});
      hqThink(MY);for(const b of B)if(b.team===MY){b.hv=-1;b.navClock=0}
      $('support-feedback').textContent='공격 금지구역 '+restrictedAreas.length+'곳';refreshSupport();return;
    }
@@ -4575,7 +4666,7 @@ function constrainTankTravel(e,ox,oz,r,list){
    if(!attackRestricted(team,target))return target;
    const safe=activeFlags().filter(f=>!attackRestricted(team,f)&&!f.secured);
    if(safe.length)return safe.sort((a,b)=>Number(a.owner===team)-Number(b.owner===team)||Math.hypot(a.x-target.x,a.z-target.z)-Math.hypot(b.x-target.x,b.z-target.z))[0];
-   return TRENCH_FLAGS.find(f=>f.home===team&&!attackRestricted(team,f))||{x:0,y:HI,z:team?78:-78,r:3,kind:'rally'};
+   return TRENCH_FLAGS.find(f=>f.home===team&&!attackRestricted(team,f))||{x:0,y:HI,z:rearZ(team?78:-78),r:3,kind:'rally'};
  }
  const objective=objectiveFor,formation=formationObjective,rail=railObjectiveFor;
  objectiveFor=b=>permittedObjective(b.team,objective(b));
