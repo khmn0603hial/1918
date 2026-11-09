@@ -35,3 +35,7 @@ https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z
 Edits: first-shot extraction, mono conversion, 24kHz PCM, fades and synthesized bass.
 These are designed game effects using surrogate firearm recordings; not authentic recordings of the experimental weapons.
 Thompson is an optional experimental/anachronistic equipment choice for this WWI scenario.
+
+## V18.0 map references and loading photographs
+
+The two map-design sheets and four historical photographs were supplied by the user for this update. The sheets provide menu illustrations and layout references. The original photographers and licensing terms were not supplied.

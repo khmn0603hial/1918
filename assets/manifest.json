@@ -91,6 +91,36 @@
       "mime": "audio/wav",
       "sha256": "827003d6081c62dc0b7a215e36f96ea89151c33a1c90abf4a0c07207d8988fc7",
       "bytes": 122428
+    },
+    "assets/media/loading-airfield.jpg": {
+      "bytes": 18989,
+      "mime": "image/jpeg",
+      "sha256": "72159fab262b60785b37ea496204365dea4bbb53326570daaac76fb8ecf5dc09"
+    },
+    "assets/media/loading-machine-gun.jpg": {
+      "bytes": 27250,
+      "mime": "image/jpeg",
+      "sha256": "5577c870e302207257542e75bdd89de1522601e148da913432a11bc0d2adbab8"
+    },
+    "assets/media/loading-dugout.jpg": {
+      "bytes": 27576,
+      "mime": "image/jpeg",
+      "sha256": "3c4c41651da064ed2d4011d454e4e5afff2e9f11e3ab2aa949e32914277f98a2"
+    },
+    "assets/media/loading-field-letter.jpg": {
+      "bytes": 42615,
+      "mime": "image/jpeg",
+      "sha256": "c4f3ff522f9d987c7d9868c81e6799e4d0e8c3242ff42eea3912b53d5fd61904"
+    },
+    "assets/media/theatres.png": {
+      "mime": "image/png",
+      "sha256": "6f99678ab8c7b2d133c6d273ab7c93e506fa6d919e6f0724a4c286db99518e5c",
+      "bytes": 3236239
+    },
+    "assets/media/sectors.png": {
+      "mime": "image/png",
+      "sha256": "c0107abe8783866edd246d53b49bb8e678a8016ee1e47b1828210740503f11cc",
+      "bytes": 3893838
     }
   }
 }

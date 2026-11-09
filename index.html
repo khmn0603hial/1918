@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><title>V.16 · 전선 너머 · 서부전선 1918 · 강철과 잿더미 V.5</title>
+<html lang="ko"><head><meta charset="utf-8"><title>서부전선 1918 · 일곱 전선의 작전도</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#1c1a14;font-family:"Malgun Gothic","Apple SD Gothic Neo",Georgia,serif;color:#e8dfc8;user-select:none}
@@ -121,7 +121,37 @@ body:has(#rail-status-dock) #battle-notices{width:calc(100vw - 640px);max-width:
 #unit-badge{position:fixed;left:12px;top:10px;z-index:9;padding:6px 14px;background:#181911e0;border:1px solid #b9a77b88;border-left:4px solid #6bb7d3;pointer-events:none;min-width:150px}#unit-badge small{display:block;font-size:11px;color:#dcc78f;letter-spacing:.08em}#unit-badge strong{display:block;font-size:18px;color:#fff1cf}#unit-badge span{display:block;font-size:12px;color:#9ad1ff}#unit-badge.response{border-left-color:#ffb24a}
 #operations-screen{position:fixed;inset:0;z-index:120;overflow:auto;background:radial-gradient(ellipse at 75% 10%,#4a514033,transparent 65%),linear-gradient(140deg,#101914f7,#10120ffa);color:#f1eadb;font-family:Arial,'Malgun Gothic',sans-serif;display:flex;align-items:center;justify-content:center;padding:40px;box-sizing:border-box}#operations-screen.hid{display:none}.op-shell{width:min(1150px,100%);margin:auto}.op-kicker{color:#d8bd7f;font-size:13px;letter-spacing:.2em;font-weight:bold}.op-shell h1{font-size:clamp(32px,5vw,64px);margin:15px 0 18px}.op-shell p{color:#bfc5b9;line-height:1.8}.op-lead{font-size:18px}.op-scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:30px 0}.op-shell button{font:inherit;cursor:pointer;color:#f1eadb;background:#263229;border:1px solid #687460;padding:16px 22px;text-align:left}.op-scenarios button{min-height:125px;display:flex;flex-direction:column;gap:10px}.op-scenarios small{color:#aeb8a4}.op-scenarios b{font-size:21px}.op-scenarios span{font-size:13px;color:#b0baa8}.op-shell button:hover,.op-shell button.selected{border-color:#edcc8b;background:#3a4432}.op-options{display:flex;flex-wrap:wrap;gap:20px}.op-options label{display:flex;flex-direction:column;gap:8px;color:#c1c8b7}.op-options select{padding:10px 18px;background:#18231c;color:#f2ead8;border:1px solid #60705a;font:inherit}.op-actions{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0}.op-actions button:first-child{background:#d5bc82;color:#172016;border-color:#d5bc82;font-weight:bold}.op-summary{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}.op-summary span{padding:12px 18px;background:#273126}.op-summary b{margin-left:10px;color:#ffe2a3}.op-strategy{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:60px 20px;background:repeating-linear-gradient(25deg,#63724e12 0 1px,transparent 1px 28px),radial-gradient(ellipse,#4d5a3a88,#1c2b20);border:1px solid #617056}.op-region{position:relative;display:flex;flex-direction:column;gap:14px;background:#493c2cef;border:2px solid #897454;padding:20px 13px;min-height:130px;justify-content:center}.op-region.held{background:#23464a;border-color:#72b6bc}.op-region.frontline{outline:3px solid #e7ca82;outline-offset:5px}.op-region span,.op-region small{font-size:12px;color:#d4cfbd}.op-region b{font-size:18px}.op-region:not(:last-child):after{content:'→';position:absolute;right:-18px;top:40%;font-size:22px;color:#e3cf9c}@media(max-width:800px){#operations-screen{padding:22px}.op-scenarios{grid-template-columns:repeat(2,1fr)}.op-strategy{grid-template-columns:1fr;padding:20px}.op-region{min-height:50px;padding:12px}.op-region:not(:last-child):after{display:none}.op-shell h1{font-size:36px}}
 
-.op-loading body>*{visibility:hidden!important}.op-loading body{background:#121914}#operations-screen{background:#131b16!important}html:has(#operations-screen:not(.hid)) body>:not(#operations-screen){visibility:hidden!important}</style></head><body><script>if(location.hash.startsWith("#op="))document.documentElement.classList.add("op-loading")</script>
+.op-loading body>*{visibility:hidden!important}.op-loading body{background:#121914}#operations-screen{background:#131b16!important}html:has(#operations-screen:not(.hid)) body>:not(#operations-screen){visibility:hidden!important}
+:root{--atlas:url('assets/media/theatres.png');--sector-atlas:url('assets/media/sectors.png');--paper:#eadfc8;--ink:#131a1c;--brass:#d6bb7d}
+#operations-screen{background:linear-gradient(120deg,#101619,#252c2c 70%,#141b20)!important}
+.op-shell{max-width:1120px}.op-shell h1,.dispatch-title{font-family:Georgia,'Malgun Gothic',serif;letter-spacing:-.045em}.op-lead{margin:0}.op-kicker{font-size:12px;color:var(--brass)}
+.op-scenarios{grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px;margin:18px 0}
+.op-scenarios button{position:relative;isolation:isolate;overflow:hidden;justify-content:flex-end;min-height:104px;padding:12px 15px;background:#253035;border:1px solid #5b6362;gap:3px}
+.op-scenarios button:before{content:'';position:absolute;inset:0;z-index:-1;background-image:var(--atlas);background-size:340% 490%;background-position:var(--atlas-x,0%) var(--atlas-y,8%);opacity:.65}
+.op-scenarios button:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(transparent,#111b20ed)}
+.op-scenarios button.selected{border-color:var(--brass);box-shadow:inset 0 -3px var(--brass)}.op-scenarios small{display:none}.op-options label[hidden]{display:none}
+.op-shell button,.ov button{transition:background .15s,border-color .15s}.op-shell,.ov:not(.hid){animation:dispatch-in .25s ease-out}
+@keyframes dispatch-in{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+#field-log{position:fixed;z-index:14;left:14px;bottom:24%;width:min(270px,27vw);max-height:126px;overflow:auto;pointer-events:none;background:#141c20cf;color:#e8e4da;font:12px/1.5 system-ui;padding:6px 9px;border-left:2px solid #b79f74}
+#field-log:empty,#field-log[hidden],body:has(.ov:not(.hid)) #field-log,body.cinematic #field-log{display:none}
+#field-log b{color:#e4ca87;margin-right:7px}#radio-subtitle{display:none!important}
+#field-loading{position:fixed;z-index:500;inset:0;display:grid;place-content:end start;padding:7vw;box-sizing:border-box;background-color:#141819;background-size:cover;background-position:center;color:white;pointer-events:auto;transition:opacity .38s ease;visibility:visible!important}
+html body>#field-loading:not([hidden]){visibility:visible!important}
+#field-loading[hidden]{display:none}#field-loading h1{margin:.2em 0;font:700 clamp(32px,6vw,80px) Georgia,'Malgun Gothic',serif}#field-loading small{font:600 14px system-ui;color:#e9d39e;letter-spacing:.13em}
+#dispatch-help{color:#efe9d9;background:#1b262b;border:1px solid #7a827e;padding:24px;max-width:min(600px,80vw);max-height:70vh;overflow:auto;visibility:visible!important}#dispatch-help::backdrop{background:#080e12bd}
+#dispatch-help .help-grid{display:block;text-align:left}#dispatch-help .help-grid>div{margin-bottom:12px}#dispatch-help button,.hq-tools button{padding:8px 12px;background:#26363b;color:white;border:1px solid #75817e}
+.hq-tools{display:flex;gap:4px;flex-wrap:wrap;margin:9px 0}.hq-tools button[aria-pressed=true]{color:#182122;background:#e2c686}
+.op-region{overflow:hidden;isolation:isolate}.op-region:before{content:'';position:absolute;inset:0;z-index:-1;background-image:var(--region-image,var(--sector-atlas));background-position:var(--rx) var(--ry);background-size:640% 760%;opacity:.24}
+@media(prefers-reduced-motion:reduce){.op-shell,.ov:not(.hid){animation:none}#field-loading{transition:none}}
+</style></head><body><script>if(location.hash.startsWith("#op="))document.documentElement.classList.add("op-loading")</script>
+<section id="field-loading" role="status"><small>서부전선 1918</small><h1>전장 준비 중</h1></section>
+<script>
+const loadingImages=['assets/media/loading-airfield.jpg','assets/media/loading-machine-gun.jpg','assets/media/loading-dugout.jpg','assets/media/loading-field-letter.jpg'];
+const loadingPanel=document.getElementById('field-loading');
+const loadingPhoto=new Image();loadingPhoto.src=loadingImages[Math.floor(Math.random()*loadingImages.length)];
+loadingPanel.style.backgroundImage='linear-gradient(0deg,#101616ed,transparent 85%),url("'+loadingPhoto.src+'")';
+</script>
+<div id="field-log" aria-label="전장 통신 기록"></div>
 <div id="music-status"></div>
 <div id="top"><div><b>연합군</b><span id="t0">400</span></div><span id="fl"></span><div><b>동맹군</b><span id="t1">400</span></div></div>
 <div id="ch"><i></i><i></i><i></i><i></i></div><div id="hm"></div><div id="dmg"></div>
@@ -151,11 +181,12 @@ body:has(#rail-status-dock) #battle-notices{width:calc(100vw - 640px);max-width:
 
 </script>
 <script>
-const OP_BOOT=(()=>{try{const match=location.hash.match(/^#op=(.*)$/);if(!match)return null;const s=JSON.parse(decodeURIComponent(match[1]));if(s.version!==1||![1,2,3,4,5,6].includes(s.scenario)||![0,1].includes(s.team)||![0,1].includes(s.attacker)||!Number.isInteger(s.front)||s.front<0||s.front>4||!Number.isInteger(s.battalions)||s.battalions<1||s.battalions>5||![150,200,300].includes(s.supply))return null;return s}catch{return null}})();
+const OP_BOOT=(()=>{try{const match=location.hash.match(/^#op=(.*)$/);if(!match)return null;const s=JSON.parse(decodeURIComponent(match[1]));if(s.version!==1||![1,2,3,4,5,6,7].includes(s.scenario)||![0,1].includes(s.team)||![0,1].includes(s.attacker)||!Number.isInteger(s.front)||s.front<0||s.front>4||!Number.isInteger(s.battalions)||s.battalions<1||s.battalions>5||![150,200,300].includes(s.supply))return null;return s}catch{return null}})();
 const OP_OUTER=!!OP_BOOT&&OP_BOOT.front!==2;
 
-const HSH=location.hash,MY=OP_BOOT?OP_BOOT.team:HSH.includes('g')?1:0,MAP=OP_BOOT?(OP_OUTER?1:OP_BOOT.scenario):+((HSH.match(/[123456]/)||[1+Math.floor(Math.random()*6)])[0]);
-const STORY_MAP=OP_BOOT?.scenario??MAP;
+const HSH=location.hash,MY=OP_BOOT?OP_BOOT.team:/^#(?:deploy-)?g/.test(HSH)?1:0;
+const STORY_MAP=OP_BOOT?.scenario??Number(HSH.match(/[1-7]/)?.[0]||1+Math.floor(Math.random()*7));
+const MAP=OP_OUTER?1:STORY_MAP===7?3:STORY_MAP;
 function storyPlace(){return OP_BOOT?OP_NAMES[STORY_MAP]+' 작전 · '+opRegionNames(STORY_MAP)[OP_BOOT.front]:MAPN[STORY_MAP]}
 const MAPN={1:'루덴도르프 공세 (1918)',2:'솜 전투 (1916 플랑드르 들판)',3:'베르됭 요새 (1916 야간 폭우)',4:'탄넨베르크 (1914)',5:'시베리아횡단철도 (1918)',6:'시나이 반도 (1917 아랍 반란)'};
 const $=id=>document.getElementById(id),R=(a,b)=>a+Math.random()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -191,12 +222,18 @@ function trenchPath(x,z){const a=Math.abs(z);if(a<60||a>84)return false;
   return [-40,0,40].some(s=>Math.abs(x-s)<2.1&&a>trenchAxis(x)-1&&a<81);
 }
 function trenchGridOpen(x,z){return trenchPath(Math.floor((x+64)/2)*2-63,Math.floor((Math.abs(z)-60)/2)*2+61)}
+var sectorGround=null;
+function sectorDepth(x,z){
+  if(!sectorGround||Math.abs(x)>=64||Math.abs(z)>=58)return 0;
+  const gx=(x+65)/2,gz=(z+60)/2,ix=Math.floor(gx),iz=Math.floor(gz),u=gx-ix,v=gz-iz,i=iz*66+ix,a=sectorGround;
+  return u+v<=1?a[i]*(1-u-v)+a[i+1]*u+a[i+66]*v:a[i+67]*(u+v-1)+a[i+1]*(1-v)+a[i+66]*(1-u);
+}
 function getTerrainElevation(x,z){const az=Math.abs(z);
   if(MAP===5||MAP===6)return HI;
   if(MAP===4){if(az<16){const bridge=bridgeSurface(x,z);return bridge??riverBedElevation(z)}if(az<20&&[-42,0,42].some(b=>Math.abs(x-b)<3.5))return HI+.8*(20-az)/4;return HI}
   if(az>=60){const step=firingStepElevation(x,z);if(step!==null)return step;for(const s of STAIRS)if(Math.abs(x-s)<SW&&az<60+RAMP)return HI*(60+RAMP-az)/RAMP;return trenchGridOpen(x,z)?0:HI}
   if(MAP===3){if(x>-9&&x<-5&&z>-9&&z<-1)return HI+FORT_RISE*(z+9)/8;if(x>5&&x<9&&z>1&&z<9)return HI+FORT_RISE*(9-z)/8}
-  let h=HI;for(const m of HILLS){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r)h+=m.h*(1-d/m.r)}return h;
+  let h=HI+sectorDepth(x,z);for(const m of HILLS){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r)h+=m.h*(1-d/m.r)}return h;
 }
 function buildZigzagTrenches(){
   if(MAP>=4)return;
@@ -282,7 +319,7 @@ if(MAP===3){const CF=0x6f7068,Y1=HI,H1=FORT_RISE-FORT_SLAB,Y2=FORT_UPPER,Y3=FORT
   for(const sx of[-.5,.5]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.12,12),M(0x5a3a1e));w.rotation.z=Math.PI/2;w.position.set(sx,.5,0);g.add(w)}g.add(b);g.position.set(x,Y2,z);g.rotation.y=ry;scene.add(g)};
  cannon(-6,-10.6,Math.PI);cannon(6,-10.6,Math.PI);cannon(-10.8,-5,-Math.PI/2);cannon(10.8,-5,Math.PI/2);
  const flagD=(x,z,ry,cs)=>{const g=new THREE.Group();cs.forEach((c,i)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.5,1.4,.05),new THREE.MeshLambertMaterial({color:c}));m.position.set((i-1)*.5,0,0);g.add(m)});g.position.set(x,Y2+2.8,z);g.rotation.y=ry;scene.add(g)};
- flagD(-3,-11.6,0,[0x2850a0,0xffffff,0xd03030]);flagD(3,-11.6,0,[0x111111,0xffffff,0xd02020]);flagD(-11.6,3,Math.PI/2,[0x2850a0,0xffffff,0xd03030]);flagD(11.6,3,-Math.PI/2,[0x111111,0xffffff,0xd02020]);
+ flagD(-3,-11.6,0,[STORY_MAP===7?0x35784d:0x2850a0,0xffffff,0xd03030]);flagD(3,-11.6,0,[STORY_MAP===7?0x982f2c:0x111111,0xffffff,0xd02020]);flagD(-11.6,3,Math.PI/2,[0x2850a0,0xffffff,0xd03030]);flagD(11.6,3,-Math.PI/2,[0x111111,0xffffff,0xd02020]);
  const zr=(id,n,x,z,fy,r)=>{ZREG[id]=reg('building',n,x,z,r,{zone:true,zid:id,fy})};
  zr('1h','1층 중앙 홀',0,0,Y1,9);zr('1nw','1층 북서 대형실',-19,-10,Y1,8);zr('1ne','1층 북동 대형실',19,-10,Y1,8);zr('1sw','1층 남서 대형실',-19,10,Y1,8);zr('1se','1층 남동 대형실',19,10,Y1,8);
  zr('2c','2층 지휘실',0,-5,Y2,6);zr('2w','2층 서측 소실',-18,1,Y2,6);zr('2e','2층 동측 소실',18,1,Y2,6);zr('2s','2층 남측 소실',0,12.3,Y2,6);
@@ -601,7 +638,7 @@ const TT={ft:{n:'르노 FT',hp:350,cost:120,sp:6,col:0x6b7a5a,turret:1},sc:{n:'�
 function mkTank(type,team,x,z){const c=TT[type],g=new THREE.Group(),L=type==='ft'?3.4:5.6,W=type==='ft'?1.8:2.5;
  const add=(p,w,h,d,col,px,py,pz)=>{const m=mk(col,new THREE.BoxGeometry(w,h,d));m.position.set(px,py,pz);p.add(m)};
  add(g,W,1,L,c.col,0,1.1,0);add(g,.5,.9,L+.3,0x222222,-W/2,.7,0);add(g,.5,.9,L+.3,0x222222,W/2,.7,0);
- const tur=new THREE.Group();tur.position.set(0,type==='ft'?1.9:2.05,type==='ft'?-.2:L/2-.7);g.add(tur);
+ const tur=new THREE.Group();tur.position.set(0,type==='ft'?1.63:2.05,type==='ft'?-.2:L/2-.7);g.add(tur);
  if(c.turret){add(tur,1,.7,1,c.col,0,.3,0);add(tur,.14,.14,1.8,0x222222,0,.3,1.2)}else{add(g,W*.8,.9,L*.5,c.col,0,2.05,-.7);add(g,W*.75,.95,1.7,c.col,0,2.05,L/2-.8);add(tur,.34,.34,2.3,0x222222,0,0,1.25);add(tur,.55,.55,.35,0x333333,0,0,.15)}
  for(const sx of[-1,1]){add(g,.18,.7,.18,0x1a1a1a,sx*W*.28,1.95,-L/2+.45);add(g,.26,.12,.26,0x884422,sx*W*.28,2.35,-L/2+.45);add(g,.25,.2,.1,0xffe08a,sx*W*.3,1.3,L/2+.02)}add(g,W*.8,.5,.9,0x3a3a30,0,1.4,-L/2+.6);
  scene.add(g);g.rotation.order='YXZ';const t={tank:true,type,team,x,y:getTerrainElevation(x,z),z,hp:c.hp,maxhp:c.hp,alive:true,hull:team?Math.PI:0,tur:team?Math.PI:0,cd:2,sc:0,tg:null,pt:0,px:x,pz:z,av:0,avd:1,id:BID++,hv:-1,lx:null,ox:0,tf:0,g,turG:tur,drv:false,hc:1.4,hr2:5,sp:c.sp,len:L,wd:W,pitch:0,mv:0};
@@ -793,8 +830,8 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
  flashM.visible=P.alive&&flash>0&&cur!==2;flashM.position.set(g.position.x,g.position.y+.04,g.position.z-(cur==0?1.2:cur==1?.85:1.0));
  // 렌더: 월드 → 깊이 초기화 → 무기 덧그리기
  upRain(dt);ren.clear();ren.render(scene,cam);ren.clearDepth();wCam.fov=60;ren.render(wScene,wCam)}
-function pickTeam(t){location.hash=(t?'g':'a')+MAP;location.reload()}
-function nextGame(){const o=[1,2,3,4,5].filter(m=>m!==MAP);location.hash=(MY?'g':'a')+o[Math.floor(Math.random()*o.length)];location.reload()}
+function pickTeam(t){location.hash=(t?'g':'a')+STORY_MAP;location.reload()}
+function nextGame(){const o=[1,2,3,4,5,6,7].filter(m=>m!==STORY_MAP);location.hash=(MY?'g':'a')+o[Math.floor(Math.random()*o.length)];location.reload()}
 const SP={
 1:{1:['전사들이여, 드디어 기나긴 참호전의 마침표를 찍을 때가 왔다! 황제 폐하의 이름으로 적의 방어선을 돌파하라! 이번 대공세가 끝나면 우리는 파리에 입성하고 마침내 고향으로 돌아갈 것이다!','너희는 조국이 자랑하는 최정예 돌격대(Sturmtruppen)다! 우리의 맹렬한 포격이 끝나는 즉시 폭풍처럼 쏟아져 들어가 적의 숨통을 끊어놓아라. 놈들이 정신을 차리기도 전에 참호를 짓밟아라!','미제 놈들이 대서양을 건너 본격적으로 몰려오기 전에 영국군과 프랑스군을 완전히 끝장내야만 한다! 제국과 고향에 있는 우리의 가족을 위해 이 마지막 전투에 모든 것을 바쳐라!'],
    0:['더 이상 물러설 곳은 없다! 우리의 등 뒤에는 조국의 운명이 걸려 있다. 전군, 무슨 일이 있어도 현 위치를 사수하라! 마지막 한 사람이 남을 때까지 한 치의 땅도 내어주어선 안 된다!','독일 놈들의 끔찍한 포격과 독가스가 걷히면 즉시 기관총을 잡고 응사하라! 놈들은 남은 병력을 쥐어짜내 발악하고 있을 뿐이다. 미군 증원부대가 오고 있다. 그때까지만 버텨내면 우리가 이긴다!','놈들이 아무리 맹렬하게 몰아쳐도 두려워하지 마라! 저들은 지쳤고 보급품도 바닥났다. 우리가 여기서 이 거대한 파도를 막아낸다면, 놈들의 전쟁 의지도 영원히 꺾일 것이다!']},
@@ -803,7 +840,9 @@ const SP={
 3:{1:['저 요새만 무너뜨리면 프랑스의 심장이 드러난다! 우리 포병이 길을 열었다. 수류탄과 화염방사기로 요새 안의 방들을 하나씩 빼앗아라!','1층 복도를 장악한 뒤 곧바로 2층 지휘실로 올라가 우리 깃발을 꽂아라. 요새의 최상층을 차지하는 자가 베르됭 전투의 영웅이 될 것이다!','비와 어둠에 흔들리지 마라. 놈들은 쥐새끼처럼 구멍 속에 숨어 있을 뿐이다. 황제 폐하와 조국을 위해 이 밤에 요새를 함락시켜라!'],
    0:['그들은 지나가지 못한다! 이 요새는 프랑스의 방패다. 구멍마다 기관총을 걸고, 독일군이 문턱을 넘는 순간 쓸어버려라!','1층 복도를 내주더라도 2층 지휘실만은 반드시 지켜야 한다. 계단목을 틀어막고 수류탄을 아끼지 말고 던져라. 지원군이 곧 도착한다!','어둠과 빗속에서도 우리는 흩어지지 않는다. 베르됭을 지켜낸 병사로 역사에 기억될 것이다. 프랑스 만세, 끝까지 버텨라!']}};
 let spOn=false;
-function briefing(){const L=OP_BOOT?[storyPlace()+'에 배치됐다. '+(MY===OP_BOOT.attacker?'지역 내 거점을 모두 확보하라.':'지역 내 거점을 방어하라.')]:SP[STORY_MAP][MY],sub=$('sub');let i=0;spOn=true;toast('🗺 '+storyPlace());
+SP[7]={0:['병사들이여, 저 구름 아래는 우리의 고향이다. 그라파의 능선을 지켜라!'],1:['산악여단, 전진! 고갯길을 지나 요새에 깃발을 올려라!']};
+MAPN[7]='그라파 산 (1917)';
+function briefing(){const L=OP_OUTER?[storyPlace()+'에 배치됐다. '+(MY===OP_BOOT.attacker?'지역 내 거점을 모두 확보하라.':'지역 내 거점을 방어하라.')]:SP[STORY_MAP][MY],sub=$('sub');let i=0;spOn=true;toast('🗺 '+storyPlace());
  const next=()=>{if(i>=L.length||!spOn||over){sub.style.opacity=0;return}const t=L[i++];sub.textContent='🎖 '+(opSides(STORY_MAP)[MY]+' 장교')+': '+t;sub.style.opacity=1;
   try{if(typeof speechSynthesis!=='undefined'){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=.95;u.pitch=.7;speechSynthesis.speak(u)}}catch(e){}
   setTimeout(next,Math.max(5000,t.length*140))};setTimeout(next,1500)}
@@ -870,10 +909,15 @@ function makeCaptureFlag(n,name,x,y,z,r,kind,home=-1){
   f.label=labelSprite(n+' · '+name,'#f1dfac',4);f.label.position.set(0,3.45,0);g.add(f.label);f.g=g;scene.add(g);ALL_FLAGS.push(f);return f;
 }
 function createFrontlineFlags(){if(createOperationFlags())return;
-  const specs=MAP===6?[['남쪽 급수 마을',-10,null,-44,7],['서쪽 바위 능선',-34,null,-20,7],['사막 우물',0,null,-4,7],['동쪽 암석 고원',32,null,10,7],['북쪽 야영지',12,null,28,7],['북쪽 급수 마을',8,null,44,7]]:MAP===4?[['남부 기지 전초',0,null,-44,7],['서쪽 도하로',-42,null,-18,7],['동쪽 강변',42,null,-18,7],['북서 교두보',-42,null,18,7],['북동 교두보',42,null,18,7],['북부 기지 전초',0,null,44,7]]:MAP===3?[['남문 진입홀',0,HI,-16,5],['서측 교신실',-15,HI,-5,4],['서측 관측실',-18,FORT_UPPER,-5,4],['중앙 지휘실',0,FORT_UPPER,-8,4],['동측 사격실',18,FORT_UPPER,7,4],['북문 방어홀',0,HI,16,5]]:
+  const specs=STORY_MAP===7?[['남쪽 고갯길',-14,null,-44,6],['서측 능선',-40,null,-22,6],['산악 요새 통신실',-15,HI,-5,4],['상층 관측소',18,FORT_UPPER,7,4],['동쪽 고갯길',39,null,22,6],['북쪽 보급로',12,null,44,6]]:MAP===6?[['남쪽 급수 마을',-10,null,-44,7],['서쪽 바위 능선',-34,null,-20,7],['사막 우물',0,null,-4,7],['동쪽 암석 고원',32,null,10,7],['북쪽 야영지',12,null,28,7],['북쪽 급수 마을',8,null,44,7]]:MAP===4?[['남부 기지 전초',0,null,-44,7],['서쪽 도하로',-42,null,-18,7],['동쪽 강변',42,null,-18,7],['북서 교두보',-42,null,18,7],['북동 교두보',42,null,18,7],['북부 기지 전초',0,null,44,7]]:MAP===3?[['남문 진입홀',0,HI,-16,5],['서측 교신실',-15,HI,-5,4],['서측 관측실',-18,FORT_UPPER,-5,4],['중앙 지휘실',0,FORT_UPPER,-8,4],['동측 사격실',18,FORT_UPPER,7,4],['북문 방어홀',0,HI,16,5]]:
     MAP===2?[['남쪽 집결지',-10,null,-44,7],['서쪽 언덕',-30,null,-26,7],['남부 늪지',-16,null,-6,7],['북부 고지',20,null,8,7],['동쪽 들판',30,null,26,7],['북쪽 집결지',10,null,44,7]]:
     [['남쪽 전초',0,null,-43,7],['교회 앞마당',-22,null,-25,6],['벙커 남문',0,HI,-7,5],['벙커 북문',0,HI,7,5],['폐허 우회로',25,null,25,6],['북쪽 전초',0,null,43,7]];
-  specs.forEach(([name,x,y,z,r],i)=>FL.push(makeCaptureFlag(String.fromCharCode(65+i),name,x,y??getTerrainElevation(x,z),z,r,'field')));
+  specs.forEach(([name,x,y,z,r],i)=>{
+    if(y==null)[x,z]=clearObjective([x,z]);
+    const f=makeCaptureFlag(String.fromCharCode(65+i),name,x,y??getTerrainElevation(x,z),z,r,'field');
+    if(!OP_BOOT&&MAP!==5){f.owner=z<-12?0:z>12?1:-1;f.p=f.owner===0?1:f.owner===1?-1:0}
+    FL.push(f);
+  });
   for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'독':'연')+(i+1),(MAP===6?['마을 우물','마을 지휘소','마을 보급소']:MAP===4?['마을 관측소','마을 지휘소','마을 보급소']:['관측 참호','작전실','보급 참호'])[i],x,MAP>=4?HI:0,(team?1:-1)*79.5,4.5,'trench',team));
 }
 
@@ -1061,13 +1105,14 @@ function initSoldierBatches(){
   }
 }
 const UNIFORMS={
+ italian:{name:'이탈리아 산악병',coat:0x66705c,trousers:0x555e50,helmet:0x55604f,webbing:0x534632},
  british:{name:'영국군',coat:0x78613a,trousers:0x625233,helmet:0x625b39,webbing:0x9c8960},
  french:{name:'프랑스군',coat:0x467799,trousers:0x385f7c,helmet:0x325b78,webbing:0x6c4c32},
  german:{name:'독일군',coat:0x526052,trousers:0x414b44,helmet:0x364239,webbing:0x493a2d},
  austrian:{name:'오헝군',coat:0xd8d2bf,trousers:0x8c8d7f,helmet:0xaaa996,webbing:0x695239},
  ottoman:{name:'오스만군',coat:0x703b35,trousers:0x584b36,helmet:0x4e3930,webbing:0x8b7150}
 };
-function pickUniformNation(team){const r=Math.random();return team?(r<.72?'german':r<.88?'austrian':'ottoman'):(r<.72?'british':'french')}
+function pickUniformNation(team){if(STORY_MAP===7)return team?'austrian':'italian';const r=Math.random();return team?(r<.72?'german':r<.88?'austrian':'ottoman'):(r<.72?'british':'french')}
 function soldierRig(team,elite,type,nation=pickUniformNation(team)){const g=new THREE.Group(),body=new THREE.Group(),parts=[];g.add(body);
   const palette=UNIFORMS[nation],uniform=palette.coat,trousers=palette.trousers,helmet=palette.helmet,band=palette.webbing,boot=0x30291f;
   const part=(parent,kind,w,h,d,x,y,z,color)=>{const o=new THREE.Object3D();o.position.set(x,y,z);o.scale.set(w,h,d);parent.add(o);parts.push({o,kind,color:new THREE.Color(color)});return o};
@@ -1357,8 +1402,12 @@ function updP(dt){
 }
 const VIEW={inside:false,skipDelta:true,request:0,mode:'auto'};
 function normalizeView(){yaw=Math.atan2(Math.sin(Number.isFinite(yaw)?yaw:0),Math.cos(Number.isFinite(yaw)?yaw:0));pitch=cl(Number.isFinite(pitch)?pitch:0,-1.48,1.48)}
-function resetViewInput(){mjx=mjy=0;VIEW.inside=false;VIEW.skipDelta=true}
+function resetViewInput(){VIEW.pendingX=VIEW.pendingY=0;mjx=mjy=0;VIEW.inside=false;VIEW.skipDelta=true}
 function updateViewInput(dt){
+  if(document.pointerLockElement===cv){
+    const blend=1-Math.exp(-dt*70),dx=(VIEW.pendingX||0)*blend,dy=(VIEW.pendingY||0)*blend;
+    yaw-=dx;pitch-=dy;VIEW.pendingX-=dx;VIEW.pendingY-=dy;
+  }
   if(noLock&&document.pointerLockElement!==cv){
     const axis=v=>Math.abs(v)<.18?0:Math.sign(v)*((Math.min(1,Math.abs(v))-.18)/.82)**1.6;
     const dx=(VIEW.inside?axis(mjx):0)+(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(VIEW.inside?axis(mjy):0)+(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
@@ -1368,7 +1417,7 @@ function updateViewInput(dt){
 function handleViewMouse(e){
   if(!isPlaying())return;
   if(document.pointerLockElement===cv){if(VIEW.skipDelta){VIEW.skipDelta=false;return}const dx=Number(e.movementX),dy=Number(e.movementY);if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.abs(dx)>500||Math.abs(dy)>500)return;
-    const rate=.0022*SENSL*(ads?.55:1);yaw-=dx*rate;pitch-=dy*rate;normalizeView();return;
+    const rate=.0022*SENSL*(ads?.55:1);VIEW.pendingX=(VIEW.pendingX||0)+dx*rate;VIEW.pendingY=(VIEW.pendingY||0)+dy*rate;return;
   }
   const r=cv.getBoundingClientRect();VIEW.inside=e.clientX>=r.left&&e.clientX<r.right&&e.clientY>=r.top&&e.clientY<r.bottom;
   mjx=VIEW.inside?cl((e.clientX-r.left)/r.width*2-1,-1,1):0;mjy=VIEW.inside?cl((e.clientY-r.top)/r.height*2-1,-1,1):0;
@@ -1830,9 +1879,9 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/
 }
 function initFrontlineV2(){
   FC[MY]=0x63b8df;FC[1-MY]=0xd4715d;
-  if(MAP===3){const sky=scene.children.find(o=>o.isHemisphereLight);if(sky){sky.intensity=.62;sky.color.setHex(0x8299b6);sky.groundColor.setHex(0x414639)}sun.intensity=.22;sun.color.setHex(0xb6c6dc)}
-  if(OP_OUTER){prepareOperationOuter();buildFiringSteps()}else{addOperationsRooms();buildFiringSteps();expandFortress();prepareTannenberg();prepareSinai();prepareRailWorld()}initDestruction();scene.updateMatrixWorld(true);rebuildWorldGrid();V2.navReady=true;createFrontlineFlags();
-  if(OP_BOOT&&MAP!==5){
+  if(MAP===3&&STORY_MAP!==7){const sky=scene.children.find(o=>o.isHemisphereLight);if(sky){sky.intensity=.62;sky.color.setHex(0x8299b6);sky.groundColor.setHex(0x414639)}sun.intensity=.22;sun.color.setHex(0xb6c6dc)}
+  if(OP_OUTER){prepareOperationOuter();buildFiringSteps()}else{addOperationsRooms();buildFiringSteps();expandFortress();prepareTannenberg();prepareSinai();prepareRailWorld();buildMainLandscape()}initDestruction();scene.updateMatrixWorld(true);rebuildWorldGrid();V2.navReady=true;createFrontlineFlags();
+  if(MAP!==5){
     for(const [index,flag] of FL.entries()){
       let count=0;
       for(let k=0;k<24&&count<2;k++){
@@ -1858,7 +1907,7 @@ function initFrontlineV2(){
 
 // Compact vehicle and supply extension; existing combat, sounds and steering are reused.
 const EXP={vehicle:null,heals:[],river:null,shopTab:'guns',water:false};
-const VEHICLE_COST={ft:180,sc:300,a7v:300,fcm:1000,tsar:900,airship:1200};
+const VEHICLE_COST={ft:180,sc:300,a7v:300,mk1:680,fcm:1000,tsar:900,airship:1200};
 function gunPrice(c){return Math.max(SHOP[c],(P.deaths||0)-P.kills)}
 function availableVehicles(){return MY?['a7v','airship']:['ft','sc','fcm','tsar']}
 function makePart(g,w,h,d,color,x,y,z){const m=mk(color,new THREE.BoxGeometry(w,h,d));m.position.set(x,y,z);g.add(m);return m}
@@ -1873,7 +1922,20 @@ function updateAutoTurrets(t,dt){if(t?.disabled){for(const q of t.autoTurrets||[
 }}
 function configureHeavy(t,type){t.special=type;t.type=type;t.sp=TT[type].sp;t.hp=t.maxhp=TT[type].hp;t.cd=0;t.reloadSeconds=15;t.playerOwned=true;t.len=type==='fcm'?10:11;t.wd=type==='fcm'?3.4:10;
   for(const c of [...t.g.children])t.g.remove(c);t.turG=new THREE.Group();t.g.add(t.turG);t.extraGuns=[];
-  if(type==='fcm'){
+  if(type==='mk1'){
+    t.len=7.6;t.wd=4.3;t.hc=1.5;t.hr2=8;
+    makePart(t.g,2.5,1.7,6.2,0x6c6950,0,1.36,0);
+    const track=new THREE.Shape();
+    track.moveTo(-3.7,1.5);track.lineTo(-2.3,.12);track.lineTo(2.4,.12);track.lineTo(3.8,2.05);track.lineTo(2.9,2.56);track.lineTo(-2.6,2.14);track.closePath();
+    const geometry=new THREE.ExtrudeGeometry(track,{depth:.64,bevelEnabled:false});
+    for(const side of [-1,1]){
+      const belt=mk(0x38392f,geometry);belt.rotation.y=Math.PI/2;belt.position.x=side*1.58-.32;t.g.add(belt);
+      makePart(t.g,1.12,.95,2,0x7c7759,side*1.76,1.33,.25);
+      const gun=side<0?t.turG:new THREE.Group();gun.position.set(side*2.06,1.52,.5);
+      if(side>0){t.g.add(gun);t.extraGuns.push(gun)}
+      makePart(gun,.22,.22,2.2,0x35382e,0,.14,1.04);
+    }
+  }else if(type==='fcm'){
     makePart(t.g,3.4,1.8,10,0x586347,0,1.6,0);for(const x of[-1.9,1.9])makePart(t.g,.65,2,10.7,0x262b25,x,1.1,0);
     t.turG.position.set(0,2.8,2.3);makePart(t.turG,1.9,1.3,1.8,0x657051,0,.4,0);makePart(t.turG,.25,.25,3.8,0x30342b,0,.5,2.3);const rear=Object.assign(addAutoTurret(t,0,2.7,-3.2),{arcCenter:Math.PI,arcHalf:Math.PI*.9});rear.g.rotation.y=Math.PI;t.hc=2.2;t.hr2=9;
   }else{
@@ -1893,7 +1955,7 @@ function buyPlayerVehicle(type){
   if(EXP.vehicle?.alive){toast('플레이어 탈것은 동시에 1대만 보유할 수 있습니다');return false}
   const allowed=availableVehicles();if(!allowed.includes(type))return false;const cost=VEHICLE_COST[type];if(PP<cost){toast('개인 포인트 부족 · '+cost+'P 필요');return false}
   const site=vehicleSpawnSite();if(!site){toast('생성 공간이 부족합니다');return false}let t;
-  if(type==='airship')t=createAirship(site.x,site.z);else{t=mkTank(type==='fcm'||type==='tsar'?'ft':type,MY,site.x,site.z);if(type==='fcm'||type==='tsar')configureHeavy(t,type)}
+  if(type==='airship')t=createAirship(site.x,site.z);else{t=mkTank(type==='fcm'||type==='tsar'?'ft':type,MY,site.x,site.z);if(type==='fcm'||type==='tsar'||type==='mk1')configureHeavy(t,type)}
   t.playerOwned=true;EXP.vehicle=t;PP-=cost;toast(TT[type].n+' 배치 · 미니맵 보라색 V · F 탑승');refreshShop();return true;
 }
 function createAirship(x,z){const t=mkTank('ft',MY,x,z);for(const c of [...t.g.children])t.g.remove(c);Object.assign(t,{airship:true,type:'airship',playerOwned:true,hp:1320,maxhp:1320,y:14,sp:6,len:27,wd:9,hc:8,hr2:64,throttle:0,crew:[],autoTurrets:[]});t.turG=new THREE.Group();t.g.add(t.turG);
@@ -1948,7 +2010,7 @@ function prepareTannenberg(){if(MAP!==4)return;
 }
 function initExpedition(){
   setupRailFactions();P.deaths=0;
-  TT.fcm={n:'FCM 2C 중전차',hp:1560,cost:1000,sp:3.2,turret:1,col:0x586347};TT.tsar={n:'차르 전차',hp:1260,cost:900,sp:3.6,turret:1,col:0x655c43};TT.airship={n:'제국 비행선',hp:1320,cost:1200,sp:6,turret:1,col:0x8f9b83};
+  TT.mk1={n:'영국 Mark I 중전차',hp:850,cost:680,sp:3.5,turret:1,col:0x6c6950};TT.fcm={n:'FCM 2C 중전차',hp:1560,cost:1000,sp:3.2,turret:1,col:0x586347};TT.tsar={n:'차르 전차',hp:1260,cost:900,sp:3.6,turret:1,col:0x655c43};TT.airship={n:'제국 비행선',hp:1320,cost:1200,sp:6,turret:1,col:0x8f9b83};
   const oldHurt=hurt;hurt=function(e,dmg,src,k,credit=src){const alive=e.alive;if(e.special){if(!k)dmg*=.5;else if(src===P||src&&!src.tank)dmg*=.5}oldHurt(e,dmg,src,k,credit);if(alive&&!e.alive&&e===P){P.deaths++;if(P.airship)leaveAirship()}if(alive&&!e.alive&&e.airship===true){for(const b of e.crew){b.alive=false;b.g.visible=false}if(P.airship===e){leaveAirship();oldHurt(P,60,{team:-1},1)}}};
   const oldTank=upTank;upTank=function(t,dt){if(!t.alive){updateAutoTurrets(t,0);return}if(t.airship){updateAirship(t,dt);return}const x=t.x,z=t.z;if(t.playerOwned&&!t.drv){t.cd=Math.max(0,t.cd-dt)}else oldTank(t,dt);if(t.special){if(!t.drv){t.hull=t.parkHull??t.hull;t.parkHull=t.hull}for(const g of t.extraGuns)g.rotation.y=t.tur-t.hull;const travel=t.frameTravel||0;t.frameTravel=0;for(const w of t.wheels||[])w.rotation.x+=travel/4.3;if(t.tailWheel)t.tailWheel.rotation.x+=travel/.8;updateAutoTurrets(t,dt);syncTank(t)}};
   const oldDrive=updTankP;updTankP=function(dt){const t=P.tank,x=t.x,z=t.z;oldDrive(dt);t.frameTravel=(t.x-x)*Math.sin(t.hull)+(t.z-z)*Math.cos(t.hull)};
@@ -2022,7 +2084,7 @@ function supportThreats(){
 }
 function announceSupport(q){
   const place=q.f.name||q.f.n,line=place+'! '+(!q.machineGuns?'여기 기관총 분대 지원이 필요해!':'지원이 필요하다! 적이 너무 많다!');
-  const radio=$('radio-subtitle');radio.textContent='🆘 '+line;radio.classList.remove('hid');
+  radioEntry('지원 요청',line);const radio=$('radio-subtitle');radio.textContent='🆘 '+line;radio.classList.remove('hid');
   BATTLE_RADIO.subtitleUntil=V2.time+7;BATTLE_RADIO.nextVoice=V2.time+16;BATTLE_RADIO.lastCall.set(q.f,V2.time);BATTLE_RADIO.announcements++;
   // An urgent field call takes precedence over the opening speech.
   spOn=false;$('sub').style.opacity=0;
@@ -2192,7 +2254,7 @@ function tryCavalryHop(b,dx,dz){if(!b.cavalry||b.cavJump||b.jumpCooldown>V2.time
 function cavalryGravity(b,dt){if(!b.cavJump){b.y=groundAt(b.x,b.z,b.y);return}b.cavJump.vy-=22*dt;b.y+=b.cavJump.vy*dt;const floor=groundAt(b.x,b.z,b.y);if(b.y<=floor){b.y=floor;b.cavJump=null}}
 function nearJumpable(e){for(const c of nearbyCols(e.x,e.z,1.6)){const rise=c.hi-e.y,dx=Math.max(c.a-e.x,0,e.x-c.b),dz=Math.max(c.c-e.z,0,e.z-c.e);if(rise>=.4&&rise<=1.55&&Math.hypot(dx,dz)<1.45)return true}if(MAP===5)for(const frame of railFrames()){const p=railLocal(frame,e);for(const b of frame.boxes||[]){const rise=frame.y+b.hi-e.y,dx=Math.max(b.a-p.x,0,p.x-b.b),dz=Math.max(b.c-p.z,0,p.z-b.e);if(rise>=.4&&rise<=1.55&&Math.hypot(dx,dz)<1.45)return true}}return false}
 function updateJumpHint(run){const hint=$('jump-hint');if(!hint)return;hint.classList.toggle('hid',!run||!P.alive||!!P.tank||!!P.airship||!nearJumpable(P));hint.textContent='Space · 점프 / 뛰어넘기'}
-function initBattleThemes(){const themes={1:['루덴도르프 · 강철의 공세','서부전선의 여섯 거점을 돌파하라'],2:['솜 · 붉게 물든 들판','진흙과 포화 속에서 전선을 밀어라'],3:['베르됭 · 그들은 지나가지 못한다','층별 요새 거점을 사수하라'],4:['탄넨베르크 · 진흙 속의 마을','기병대와 마을 진지 · 진흙을 경계하라'],6:['시나이 반도 · 사막의 반란','아랍 반란군 대 오스만군 · 부서지는 흙벽 마을과 암석산'],5:['시베리아횡단철도 · 장갑열차 사수 V.2','백군 대 적군 · 제한된 시야 속 장갑열차 공방전']},theme=themes[MAP];$('menu').querySelector('h1').textContent=theme[0]+' · 강철과 잿더미';document.title='서부전선 1918 · 강철과 잿더미 · '+theme[0];const line=document.createElement('div');line.className='map-theme-line';line.textContent=theme[1];$('menu').querySelector('h1').after(line);
+function initBattleThemes(){const themes={1:['루덴도르프 · 강철의 공세','서부전선의 여섯 거점을 돌파하라'],2:['솜 · 붉게 물든 들판','진흙과 포화 속에서 전선을 밀어라'],3:['베르됭 · 그들은 지나가지 못한다','층별 요새 거점을 사수하라'],4:['탄넨베르크 · 진흙 속의 마을','기병대와 마을 진지 · 진흙을 경계하라'],6:['시나이 반도 · 사막의 반란','아랍 반란군 대 오스만군 · 부서지는 흙벽 마을과 암석산'],5:['시베리아횡단철도 · 장갑열차 사수 V.2','백군 대 적군 · 제한된 시야 속 장갑열차 공방전']},theme=STORY_MAP===7?['그라파 산 · 구름 속 요새','능선과 요새 사이의 산길을 확보하라']:themes[MAP];$('menu').querySelector('h1').textContent=theme[0]+' · 강철과 잿더미';document.title='서부전선 1918 · 강철과 잿더미 · '+theme[0];const line=document.createElement('div');line.className='map-theme-line';line.textContent=theme[1];$('menu').querySelector('h1').after(line);
   if(MAP===5){for(const team of[0,1])document.querySelectorAll('[onclick="pickTeam('+team+')"]').forEach(b=>b.textContent=team?'적군 (혁명군)':'백군 (체코·러시아군)');$('top').firstElementChild.querySelector('b').textContent='백군';$('top').lastElementChild.querySelector('b').textContent='적군';document.querySelectorAll('#menu > .cur,#end > .cur').forEach(e=>e.textContent='현재 진영: '+(MY?'적군 (혁명군)':'백군 (체코·러시아군)')+' · 시베리아횡단철도')}
   const hint=document.createElement('div');hint.id='jump-hint';hint.className='hid';document.body.appendChild(hint);
 }
@@ -2387,9 +2449,9 @@ const MEMORIAL_VERSES=[
     "original": "Гуляет ветер, порхает снег. / Идут двенадцать человек."
   }
 ];
-function pickMemorialVerse(){const pool=MEMORIAL_VERSES.filter(v=>v.maps.includes(STORY_MAP===6?1:STORY_MAP)&&v.text!==MEMORIAL.lastVerse),verse=pool[Math.floor(Math.random()*pool.length)];MEMORIAL.lastVerse=verse.text;return verse}
-const SOLDIER_NAMES={british:[['William','George','Arthur','Thomas','James','Edward','Henry','Albert'],['Bennett','Wilson','Hughes','Turner','Clarke','Walker','Harris','Edwards']],french:[['Louis','Jean','Henri','Pierre','Marcel','André','Émile','Lucien'],['Martin','Lefèvre','Moreau','Laurent','Dubois','Bernard','Petit','Roux']],german:[['Wilhelm','Karl','Friedrich','Otto','Heinrich','Ernst','Paul','Walter'],['Weber','Schneider','Fischer','Bauer','Wagner','Hoffmann','Becker','Keller']],austrian:[['Franz','Josef','Anton','Karl','Leopold','Ferdinand'],['Gruber','Huber','Wagner','Steiner','Hofer','Mayer']],ottoman:[['Mehmet','Ahmet','Mustafa','Hasan','Hüseyin','İbrahim'],['Ali','Osman','Salih','İsmail','Halil','Yusuf']],russian:[['Ivan','Nikolai','Alexei','Sergei','Mikhail','Dmitri','Pavel','Andrei'],['Petrov','Ivanov','Sokolov','Smirnov','Volkov','Kuznetsov','Orlov','Popov']],czech:[['Jan','Josef','František','Václav','Karel','Antonín','Jaroslav','Bohumil'],['Novák','Svoboda','Dvořák','Černý','Procházka','Kučera','Veselý','Horák']]};
-function newSoldierIdentity(){const year={1:1918,2:1916,3:1916,4:1914,5:1918,6:1917}[STORY_MAP],nation=STORY_MAP===6?(MY?(Math.random()<.15?'german':'ottoman'):(Math.random()<.9?'arab':'british')):STORY_MAP===5?(MY?'russian':Math.random()<.8?'czech':'russian'):STORY_MAP===4?(MY?'german':'russian'):MY?['german','german','german','austrian','ottoman'][Math.floor(Math.random()*5)]:Math.random()<.5?'british':'french',pool=SOLDIER_NAMES[nation],pick=a=>a[Math.floor(Math.random()*a.length)],max=Math.min(1899,year-18),min=year-45;return{name:pick(pool[0])+' '+pick(pool[1]),born:min+Math.floor(Math.random()*(max-min+1)),year,nation,place:OP_BOOT?storyPlace():{1:'루덴도르프 공세',2:'솜 전투',3:'베르됭 전투',4:'탄넨베르크 전투',5:'시베리아횡단철도 전투',6:'시나이 반도 전투'}[STORY_MAP]}}
+function pickMemorialVerse(){const pool=MEMORIAL_VERSES.filter(v=>v.maps.includes(STORY_MAP>=6?1:STORY_MAP)&&v.text!==MEMORIAL.lastVerse),verse=pool[Math.floor(Math.random()*pool.length)];MEMORIAL.lastVerse=verse.text;return verse}
+const SOLDIER_NAMES={italian:[['Carlo','Giovanni','Enrico','Pietro'],['Rossi','Ferrari','Bianchi','Costa']],british:[['William','George','Arthur','Thomas','James','Edward','Henry','Albert'],['Bennett','Wilson','Hughes','Turner','Clarke','Walker','Harris','Edwards']],french:[['Louis','Jean','Henri','Pierre','Marcel','André','Émile','Lucien'],['Martin','Lefèvre','Moreau','Laurent','Dubois','Bernard','Petit','Roux']],german:[['Wilhelm','Karl','Friedrich','Otto','Heinrich','Ernst','Paul','Walter'],['Weber','Schneider','Fischer','Bauer','Wagner','Hoffmann','Becker','Keller']],austrian:[['Franz','Josef','Anton','Karl','Leopold','Ferdinand'],['Gruber','Huber','Wagner','Steiner','Hofer','Mayer']],ottoman:[['Mehmet','Ahmet','Mustafa','Hasan','Hüseyin','İbrahim'],['Ali','Osman','Salih','İsmail','Halil','Yusuf']],russian:[['Ivan','Nikolai','Alexei','Sergei','Mikhail','Dmitri','Pavel','Andrei'],['Petrov','Ivanov','Sokolov','Smirnov','Volkov','Kuznetsov','Orlov','Popov']],czech:[['Jan','Josef','František','Václav','Karel','Antonín','Jaroslav','Bohumil'],['Novák','Svoboda','Dvořák','Černý','Procházka','Kučera','Veselý','Horák']]};
+function newSoldierIdentity(){const year={1:1918,2:1916,7:1917,3:1916,4:1914,5:1918,6:1917}[STORY_MAP],nation=STORY_MAP===7?(MY?'austrian':'italian'):STORY_MAP===6?(MY?(Math.random()<.15?'german':'ottoman'):(Math.random()<.9?'arab':'british')):STORY_MAP===5?(MY?'russian':Math.random()<.8?'czech':'russian'):STORY_MAP===4?(MY?'german':'russian'):MY?['german','german','german','austrian','ottoman'][Math.floor(Math.random()*5)]:Math.random()<.5?'british':'french',pool=SOLDIER_NAMES[nation],pick=a=>a[Math.floor(Math.random()*a.length)],max=Math.min(1899,year-18),min=year-45;return{name:pick(pool[0])+' '+pick(pool[1]),born:min+Math.floor(Math.random()*(max-min+1)),year,nation,place:OP_BOOT?storyPlace():{1:'루덴도르프 공세',2:'솜 전투',7:'그라파 산 전투',3:'베르됭 전투',4:'탄넨베르크 전투',5:'시베리아횡단철도 전투',6:'시나이 반도 전투'}[STORY_MAP]}}
 function showMemorial(){if(V2.phase!=='normal'){MEMORIAL.active=false;$('memorial').classList.add('hid');return}MEMORIAL.identity||=newSoldierIdentity();MEMORIAL.active=true;MEMORIAL.elapsed=0;const p=MEMORIAL.identity,verse=pickMemorialVerse();$('memorial-name').textContent=p.name;$('memorial-years').textContent=p.born+' — '+p.year;$('memorial-place').textContent=p.place+'에서 전사';$('memorial-verse').textContent='“'+verse.text+'”';$('memorial-credit').textContent=verse.credit;$('memorial-next').textContent='새로운 병사로 재배치됩니다';$('memorial').classList.remove('hid','ready');$('memorial').style.opacity=0;P.dt=5}
 function updateMemorial(dt,run){if(!MEMORIAL.active)return;if(run||over)MEMORIAL.elapsed+=dt;$('memorial').style.opacity=Math.min(1,MEMORIAL.elapsed/1.15);$('memorial').classList.toggle('ready',MEMORIAL.elapsed>.8);if(MEMORIAL.elapsed>=5){MEMORIAL.active=false;$('memorial').classList.add('hid')}}
 function initMemorial(){const box=document.createElement('div');box.id='memorial';box.className='hid';box.innerHTML='<div class="memorial-card"><div class="memorial-rule"></div><div id="memorial-name"></div><div id="memorial-years"></div><div id="memorial-place"></div><div class="memorial-rule"></div><blockquote id="memorial-verse"></blockquote><div id="memorial-credit"></div><small id="memorial-next"></small></div>';document.body.appendChild(box);MEMORIAL.identity=newSoldierIdentity();const previousHurt=hurt;hurt=function(e,...args){const alive=e.alive;previousHurt(e,...args);if(e===P&&alive&&!P.alive)showMemorial()};const previousRespawn=respawnP;respawnP=function(){previousRespawn();if(P.alive){MEMORIAL.identity=newSoldierIdentity();MEMORIAL.active=false;$('memorial').classList.add('hid')}}}
@@ -2454,8 +2516,9 @@ function nameScenarioPositions(){
     2:[['영국 전방 참호','영불 합동 본부','프랑스 보급 진지'],['독일 서측 보루','독일 방어 본부','독일 동측 보루']],
     3:[['프랑스 서측 보루','베르됭 방어 본부','프랑스 동측 보루'],['독일 공성 진지','독일 공성 본부','독일 포병 보급소']],
     6:[['아랍 서측 초소','반군 지휘소','반군 보급 우물'],['오스만 서측 초소','오스만 지휘소','독일 보급소']],4:[['러시아 마을 초소','러시아 야전 본부','러시아 마을 창고'],['독일 마을 초소','독일 야전 본부','독일 마을 창고']],
+    7:[['서측 산악 보루','그라파 방어 본부','동측 산악 보루'],['능선 전초','산악여단 본부','산악 보급소']],
     5:[['역 서측 승강장','백군 역 지휘소','역 동측 창고'],['적군 서측 보루','혁명군 지휘소','적군 보급 진지']]
-  }[MAP];
+  }[STORY_MAP];
   for(const team of[0,1])TRENCH_FLAGS.filter(f=>f.home===team).forEach((f,i)=>renameBattleFlag(f,names[team][i]));
 }
 function renameBattleFlag(f,name){f.n=f.name=name;f.g.remove(f.label);f.label=labelSprite(name,'#e8d6af',4.6);f.label.position.y=3.45;f.g.add(f.label)}
@@ -2830,7 +2893,7 @@ function createCorpse(c){
 }
 function updateAftermath(){for(let i=0;i<2&&AFTERMATH.queue.length;i++)createCorpse(AFTERMATH.queue.shift())}
 function victorySpeech(winner){if(MAP===6)return winner?'병사들이여, 시나이의 마을을 지켜냈다. 모래 속에 잠든 전우를 기억하라!':'형제들이여, 사막의 길이 열렸다. 쓰러진 이들의 이름을 기억하라!';if(MAP===5)return winner?'동지들이여, 철도는 우리 손에 있다. 오늘의 승리를 기억하라!':'군단병들이여, 길을 열었다! 동료들을 기억하며 고향으로 전진하라!';if(MAP===4&&!winner)return'병사들이여, 러시아의 깃발이 다시 오른다. 쓰러진 전우들의 이름을 기억하라!';return winner?'전우들이여, 진지를 확보했다. 오늘 버틴 모든 병사에게 영광을!':'전우들이여, 전선을 지켜냈다. 돌아오지 못한 이들을 잊지 말자!'}
-function victoryTeam(winner){if(MAP===6)return winner?'오스만군 · 독일군':'아랍 반란군 · 영국군';return MAP===5?(winner?'적군':'백군 · 체코군'):MAP===4?(winner?'동맹국':'연합군 · 러시아군'):(winner?'동맹국':'연합군')}
+function victoryTeam(winner){if(STORY_MAP===7)return opSides(7)[winner];if(MAP===6)return winner?'오스만군 · 독일군':'아랍 반란군 · 영국군';return MAP===5?(winner?'적군':'백군 · 체코군'):MAP===4?(winner?'동맹국':'연합군 · 러시아군'):(winner?'동맹국':'연합군')}
 function defeatSpeech(team){if(MAP===6)return'이번 전투는 패배했다. 모래바람 속에서 전열을 수습하고 후퇴하라.';if(MAP===5)return team?'동지들이여, 이번 전투는 패배했다. 살아남은 병력은 퇴각하고 다시 집결하라.':'군단병들이여, 이번 전투는 패배했다. 전우들을 수습하고 퇴각하라.';if(MAP===4&&!team)return'러시아의 병사들이여, 이번 전투는 패배했다. 쓰러진 전우들을 기억하며 후퇴하라.';return team?'전우들이여, 진지를 잃었다. 이번 전투는 패배했다. 살아남은 병력은 후퇴하라.':'병사들이여, 전선을 지키지 못했다. 이번 전투는 패배했다. 전우들을 수습하고 후퇴하라.'}
 function beginVictory(winner,reason){
   if(over)return;over=true;V2.finishedReason=reason;V2.paused=true;spOn=false;resetHeldInput();document.exitPointerLock();setAmbientRunning(false);MEMORIAL.active=false;$('memorial')?.classList.add('hid');for(const id of['pause','support-ui','shop-ui','end'])$(id)?.classList.add('hid');
@@ -3131,7 +3194,14 @@ function checkRailTotalLoss(){
   if(V2.phase!=='normal'||RAIL.totalLossCharged)return;RAIL.totalLossCharged=true;tickets[0]=Math.max(0,tickets[0]-130);V2.lastKillerTeam=1;railNotice('열차 전 칸 파괴 · 체코군 티켓 −130');checkEnd();
 }
 function railNotice(text){RAIL_SIEGE.notice=String(text);RAIL_SIEGE.noticeUntil=V2.time+8;const el=$('rail-notice');if(el)el.textContent=text}
+function radioEntry(source,text){
+  const list=$('field-log');if(!list||list.lastElementChild?.dataset.message===text)return;
+  const line=document.createElement('div'),tag=document.createElement('b');tag.textContent=source;
+  line.dataset.message=text;line.append(tag,document.createTextNode(text));list.append(line);
+  if(list.children.length>30)list.firstElementChild.remove();list.scrollTop=list.scrollHeight;
+}
 function staffOrder(title,details=[]){
+  if(started)radioEntry('참모부',[title,...details].join(' · '));
   const el=$('order');if(!el)return;el.replaceChildren();const label=document.createElement('small');label.textContent='총참모부 명령';const main=document.createElement('strong');main.textContent=title;el.append(label,main);
   if(details.length){const row=document.createElement('div');row.className='staff-details';for(const text of details){const chip=document.createElement('span');chip.textContent=text;row.appendChild(chip)}el.appendChild(row)}
 }
@@ -3188,7 +3258,7 @@ function refreshUnitUI(){
   const plan=HQ[MY].plan,okey=UNIT.kind+UNIT.idx+sub+plan.label+plan.version;if(ord.dataset.k===okey)return;ord.dataset.k=okey;
   ord.replaceChildren();const l=document.createElement('small'),m=document.createElement('strong');
   if(UNIT.kind==='response'){l.textContent='대응 명령';m.textContent=sub.replace('→ ','');ord.append(l,m)}
-  else{l.textContent='총참모부 명령';m.textContent=plan.label;const row=document.createElement('div');row.className='staff-details';const ch=document.createElement('span');ch.textContent='내 부대('+title+') '+sub;row.appendChild(ch);ord.append(l,m,row)}
+  else{l.textContent='내 부대 · '+title;m.textContent=sub;const row=document.createElement('div');row.className='staff-details';const ch=document.createElement('span');ch.textContent='내 부대('+title+') '+sub;row.appendChild(ch);ord.append(l,m)}
 }
 let ejectAcc=0;
 function ejectFromWrecks(dt){
@@ -3356,28 +3426,133 @@ function initSinai(){
 }
 
 const OPERATIONS={state:OP_BOOT,transition:false,selected:3,screen:null,active:!!OP_BOOT,clock:0};
-const OP_NAMES={1:'루덴도르프 공세',2:'솜 전투',3:'베르됭',4:'탄넨베르크',5:'시베리아횡단철도',6:'시나이 반도'};
+const OP_NAMES={1:'루덴도르프 공세',2:'솜 전투',7:'그라파 산',3:'베르됭',4:'탄넨베르크',5:'적백내전',6:'시나이 반도'};
 const OP_REGIONS={3:['접경 집결지','뫼즈 외곽 마을','베르됭 요새','북부 구릉 방어선','최후방 보급지']};
 function opRegionNames(id){return OP_REGIONS[id]||['전방 집결지','외곽 전초지',OP_NAMES[id],'후방 방어선','최후방 보급지']}
-function opSides(id){return id===5?['백군','적군']:id===6?['아랍 반란군','오스만군']:id===4?['러시아군','독일군']:['협상군','동맹군']}
+function opSides(id){return id===7?['이탈리아군','오스트리아·헝가리군']:id===5?['백군','적군']:id===6?['아랍 반란군','오스만군']:id===4?['러시아군','독일군']:['협상군','동맹군']}
 function signalWhistle(n){if(!AC)return;for(let i=0;i<n;i++){const t=AC.currentTime+i*1.25,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(1750,t);o.frequency.linearRampToValueAtTime(2020,t+.12);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.06);g.gain.linearRampToValueAtTime(0,t+(n===3?1:.55));o.connect(g).connect(AC.destination);o.start(t);o.stop(t+1.1);o.onended=()=>{o.disconnect();g.disconnect()}}}
 function opNavigate(state){location.replace(location.pathname+location.search+'#op='+encodeURIComponent(JSON.stringify(state)));location.reload()}
 function opRandom(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
 const OUTER_THEMES={
  1:[['포격 분지','crater'],['무너진 목골 마을','town'],['운하 보급항','canal'],['잿빛 능선','ridge']],
- 2:[['안개 낀 목초지','field'],['범람한 습지','marsh'],['들판의 폐촌','town'],['분화구 고지','ridge']],
+ 2:[['안개 낀 목초지','field'],['범람한 습지','marsh'],['숲속 폐허','forest'],['들판의 패전지','ruins']],
  3:[['폐허 집결지','ruins'],['뫼즈 수변 폐허','canal'],['검게 탄 능선','ridge'],['포격 잔해 지대','crater']],
+ 7:[['구름 속 능선','ridge'],['알프스 요새 전초지','fort'],['암반 동굴 통로','cave'],['산비탈 바위 들판','mountain']],
  4:[['호수 전초지','lake'],['침수된 삼림','marsh'],['동프로이센 목조 마을','town'],['수림 방어선','forest']],
- 5:[['설산 협곡','mountain'],['설원 오두막 마을','town'],['오로라 강변','canal'],['눈사태 능선','ridge']],
+ 5:[['설산 협곡','mountain'],['설원 오두막 마을','town'],['오로라 강변','canal'],['크렘린 궁전 · 눈덮인 성벽','palace']],
  6:[['모래바람 집결지','dunes'],['오아시스 습지','lake'],['사막 교역 마을','town'],['사암 협곡','mountain']]
 };
 let OUTER_LAYOUT=null;
+function clearObjective([x,z],room){
+  const usable=(px,pz)=>!blocked(px,pz,getTerrainElevation(px,pz),.85,1.85)&&(!room||(px>room.a+.6&&px<room.b-.6&&pz>room.c+.6&&pz<room.e-.6));
+  if(usable(x,z))return [x,z];
+  for(let r=1;r<=14;r++)for(let j=0;j<16;j++){
+    const angle=j*Math.PI/8,px=x+r*Math.cos(angle),pz=z+r*Math.sin(angle);
+    if(usable(px,pz))return [px,pz];
+  }
+  return [x,z];
+}
+function sculptFront(id,variant){
+  // Sample once at construction. Rendering and movement use the same triangulated height field.
+  const floor=solids.find(m=>m.geometry.type==='PlaneGeometry'&&m.geometry.parameters.width===130&&m.geometry.parameters.height===120&&m.position.z===0);
+  if(!floor||(!OP_OUTER&&MAP>=4))return;
+  const geo=new THREE.PlaneGeometry(130,120,65,60),v=geo.attributes.position,depth=new Float32Array(v.count);
+  const pits=Array.from({length:9},(_,i)=>[Math.sin(i*7.1+id)*42,(i-4)*10+variant,3+i%3]);
+  for(let i=0;i<v.count;i++){
+    const x=v.getX(i),z=-v.getY(i);
+    if(Math.abs(x)>58||Math.abs(z)>48||HILLS.some(h=>Math.hypot(x-h.x,z-h.z)<h.r+1))continue;
+    if(cols.some(c=>x>c.a-3&&x<c.b+3&&z>c.c-3&&z<c.e+3))continue;
+    let d=0;
+    for(const [px,pz,r]of pits)d=Math.max(d,Math.max(0,1-Math.hypot(x-px,z-pz)/r)*1.2);
+    const trenchX=(z<0?-1:1)*(14+variant)+4*Math.sin(z*.18+id);
+    d=Math.max(d,1.45*Math.max(0,1-Math.abs(x-trenchX)/3.8)*Math.min(1,(48-Math.abs(z))/5));
+    v.setZ(i,-d);depth[i]=-d;
+  }
+  geo.computeVertexNormals();floor.geometry=geo;sectorGround=depth;
+}
+function alpinePeaks(){
+  for(let i=0;i<18;i++){
+    const x=(i%2?1:-1)*(73+(i%3)*5),z=-82+Math.floor(i/2)*20,h=19+(i*17)%24;
+    const base=mk(0x737978,new THREE.ConeGeometry(16+i%7,h,7));base.position.set(x,HI+h/2,z);scene.add(base);
+    const cap=mk(0xe3e9e9,new THREE.ConeGeometry((16+i%7)*.37,h*.37,7));cap.position.set(x,HI+h*.815+.04,z);scene.add(cap);
+  }
+}
+function fieldWorks(x,z,color){
+  const first=solids.length;
+  for(const [dx,dz,w,d]of [[-3,0,.8,5],[1,2.1,4,.85],[1,-2.1,2,.85]]){
+    const px=x+dx,pz=z+dz;addBox(w,1.05,d,color,px,getTerrainElevation(px,pz),pz);
+  }
+  markStructureRange(first,'fieldworks:'+x+','+z);
+}
+function buildSectorLandmark(kind,id){
+  if(id===7)alpinePeaks();
+  if(kind==='palace'){
+    for(const [x,z]of[[-42,-26],[43,24],[-45,32]]){
+      const r=14,h=4;HILLS.push({x,z,r,h});const bank=mk(0xd5e1e5,new THREE.ConeGeometry(r,h,18));bank.position.set(x,HI+h/2,z);scene.add(bank);solids.push(bank);
+    }
+    for(const z of[-15,15])for(const side of[-1,1]){
+      const x=side*14;addBox(19,3.5,1.2,0x914c3c,x,HI,z);
+      addBox(4.8,6,4.8,0x964f3e,side*23,HI,z);
+      const spire=mk(0x465f53,new THREE.ConeGeometry(3.6,6,4));spire.rotation.y=Math.PI/4;spire.position.set(side*23,HI+9,z);scene.add(spire);
+    }
+    for(const x of[-9,0,9]){addBox(5,6,6,0xd0b689,x,HI,1);
+      const dome=mk(0x9f8950,new THREE.SphereGeometry(2.6,10,7));dome.position.set(x,HI+6.4,1);scene.add(dome)}
+  }else if(kind==='cave'||kind==='fort'){
+    for(let i=0;i<5;i++){
+      const z=i*3-6;for(const x of[-5,5])addBox(4,3.6,3.1,0x777973,x,HI,z);
+      if(i!==2||kind==='cave')addBox(12.5,1.5,3.1,0x8c8e87,0,HI+3.6,z);
+    }
+  }else if(kind==='canal'){
+    for(const x of[-12,-9,13])fieldWorks(x,24,0x75654d);
+  }else if(kind==='lake'||kind==='marsh'){for(let i=0;i<6;i++)addBox(2.5,.24,2.3,0x78654e,2,HI,-11+i*2.3)}
+  else if(kind==='town'||kind==='ruins'){fieldWorks(-6,-8,0x807365);fieldWorks(8,16,0x817669)}
+  else {fieldWorks(-9,-14,0x7a715d);fieldWorks(10,13,0x79715d)}
+  sculptFront(id,OUTER_LAYOUT.variant);
+}
+function buildMainLandscape(){
+  const id=STORY_MAP;
+  if(id===7){
+    alpinePeaks();
+    // A covered traverse links the lower pass with the eastern side of the fort.
+    for(const z of[-13,-9,-5,-1,3,7,11]){
+      addBox(1.8,3,3.7,0x797c74,33,HI,z);
+      if(z!==-1&&z!==7)addBox(.8,3,1,0x85877d,38,HI,z);
+      addBox(6.8,.8,4,0x818579,35.5,HI+3,z);
+    }
+    for(const [x,z,r,h]of [[-41,-22,13,4],[39,22,14,5],[-42,30,11,3],[32,-37,10,3]]){
+      HILLS.push({x,z,r,h});const slope=mk(0x8c9386,new THREE.ConeGeometry(r,h,24));slope.position.set(x,HI+h/2,z);scene.add(slope);solids.push(slope);
+    }
+  }
+  if(id===5){
+    // The movable railway retains its original track, clearances and carriage objectives.
+    for(const floor of solids)if(floor.geometry?.type==='PlaneGeometry'&&floor.geometry.parameters.width>=100){
+      floor.material=new THREE.MeshLambertMaterial({color:0xdbe4e8});
+    }
+    const track=railRoute().getSpacedPoints(160);
+    for(const [x,z]of [[-14,-18],[13,-15],[-13,18],[9,19],[-55,44],[51,-47]]){
+      if(track.some(p=>Math.hypot(x-p.x,z-p.z)<12))continue;
+      const start=solids.length;for(const dx of[-3,3])addBox(.5,2.8,6,0x745642,x+dx,HI,z);
+      addBox(6,2.8,.5,0x69503f,x,HI,z+3);addBox(6.8,.45,6.8,0xdfe6e8,x,HI+2.8,z);
+      markStructureRange(start,'operation-house:rail'+x);
+    }
+    alpinePeaks();return;
+  }
+  if(id===4){
+    for(const [x,z] of [[-24,-32],[-28,-29],[26,28],[30,30],[-34,19],[36,-19]])tree(x,z);
+  }else if(id===6){
+    sinaiHouse(-14,4,'sinai-caravan');sinaiHouse(16,-7,'sinai-oil-office');
+    for(const x of[20,24]){const tank=mk(0x656759,new THREE.CylinderGeometry(1.6,1.6,3.3,12));tank.position.set(x,HI+1.65,-12);scene.add(tank);addBox(2.7,3.15,2.7,0x656759,x,HI,-12)}
+  }
+  const sites={1:[[-18,7],[18,-10],[5,33]],2:[[-14,-15],[14,18],[4,34]],3:[[-34,-28],[36,30]],4:[[-16,-25],[13,27]],6:[[-11,-24],[15,21]],7:[[-33,-15],[33,18]]};
+  for(const [x,z]of sites[id]||[])fieldWorks(x,z,id===6?0xb19a6d:0x7a705d);
+  sculptFront(id,2);
+}
 function buildThemedOuter(){
  const scenario=OP_BOOT.scenario,index=[0,1,3,4].indexOf(OP_BOOT.front),variant=Math.max(0,index),theme=OUTER_THEMES[scenario][variant];
  OUTER_LAYOUT={name:theme[0],type:theme[1],variant,flags:[],interiors:[]};
  for(const o of [...scene.children])if(!o.isLight&&!o.isCamera)scene.remove(o);
  solids.length=cols.length=walls.length=REG.length=HILLS.length=SWAMPS.length=FIRING_STEPS.length=0;
- const rnd=opRandom(OP_BOOT.seed+scenario*701+variant*199),snow=scenario===5,sand=scenario===6,dead=scenario===1||scenario===3;
+ const rnd=opRandom(OP_BOOT.seed+scenario*701+variant*199),snow=scenario===5||scenario===7,sand=scenario===6,dead=scenario===1||scenario===3;
  const ground=snow?0xd9e4ec:sand?0xd8b67d:dead?0x403b34:scenario===2?0x79825a:0x516047;
  plane(130,120,HI,0,ground);plane(130,25,0,72.5,snow?0xc3d2dc:sand?0xc6a46b:0x514332);plane(130,25,0,-72.5,snow?0xc3d2dc:sand?0xc6a46b:0x514332);buildZigzagTrenches();
  const kind=theme[1];
@@ -3402,7 +3577,7 @@ function buildThemedOuter(){
   for(const sg of[-1,1]){for(const dx of[-w/2+1,w/2-1])addBox(2,h,.35,col,x+dx,y,z+sg*d/2);addBox(w-4,h-2.5,.35,col,x,y+2.5,z+sg*d/2)}
   addBox(w+.45,.25,d+.45,snow?0xe4ecf1:sand?0xb19471:0x66534a,x,y+h,z);
   if(wood||kind==='town'){
-   for(const dx of[-w/2,w/2,0])addBox(.18,h,.42,0x3b3028,x+dx,y,z+d/2+.05);
+   for(const dx of[-w/2,w/2])addBox(.18,h,.42,0x3b3028,x+dx,y,z+d/2+.05);
    for(let k=0;k<5;k++)addBox((w+.8)*(1-k/5),.25,d+.8,snow?0xe5eef5:0x58463d,x,y+h+.25+k*.25,z);
   }
   if(kind==='ruins'||kind==='crater')addBox(1.1,1.5,1.2,0x655b4f,x+5,y,z+2);
@@ -3410,16 +3585,34 @@ function buildThemedOuter(){
   reg('building',snow?'설원 목조 오두막':kind==='town'?'목골 가옥':'전초 가옥',x,z,6,{house:true,hx:w/2,hz:d/2});
   OUTER_LAYOUT.interiors.push({x,z,y,a:x-w/2+.3,b:x+w/2-.3,c:z-d/2+.3,e:z+d/2-.3});
  }
+ // Street frontages face the midfield approach; entrances remain open at both ends.
+ if(kind==='town'||kind==='ruins'||kind==='fort'){
+   building(-11,-8,100);building(12,11,101);
+ }
  const count=kind==='town'?10:kind==='canal'?8:kind==='ruins'?7:4;
  for(let i=0;i<count;i++){const side=i%2?1:-1,row=Math.floor(i/2),x=side*(25+(variant%2)*8),z=-43+row*(count>8?19:26)+(variant-1)*3;if(Math.abs(z)<52)building(x,z,i)}
  if(kind==='forest'||kind==='marsh'||scenario===4){for(let i=0;i<30;i++){const x=(i%2?1:-1)*(19+rnd()*37),z=-48+rnd()*96;if(REG.some(g=>g.house&&Math.hypot(x-g.x,z-g.z)<8))continue;tree(x,z)}}
  for(let i=0;i<24;i++){const x=(i%2?1:-1)*(10+rnd()*42),z=-48+rnd()*96;if(REG.some(g=>g.house&&Math.hypot(x-g.x,z-g.z)<7))continue;addBox(1.5+rnd(),.65+rnd()*.35,.9,snow?0x88969c:sand?0xa58c67:0x685d49,x,getTerrainElevation(x,z),z)}
- const paths=[[[0,-33],[-16,-3],[12,31]],[[-12,-30],[12,0],[-10,32]],[[14,-31],[0,6],[-15,34]],[[-17,-34],[15,-3],[0,33]]];
- OUTER_LAYOUT.flags=paths[variant].map(p=>p.slice());
- if(['town','canal','ruins'].includes(kind)||snow){const room=OUTER_LAYOUT.interiors[2]||OUTER_LAYOUT.interiors[0];OUTER_LAYOUT.flags[1]=[room.x,room.z];OUTER_LAYOUT.indoor=room}
+ buildSectorLandmark(kind,scenario);
+ const layouts=[
+   [[-15,-36],[16,-4],[-8,30]],
+   [[-22,-45],[18,-35],[-36,-18],[5,-9],[28,8],[-19,17],[34,32],[-7,46]],
+   [[15,-39],[-22,-16],[4,8],[24,31]],
+   [[-14,-42],[22,-24],[-13,-1],[14,20],[-5,40]]
+ ];
+ // Mirror the lateral approach by theatre while keeping the sectors contiguous in depth.
+ OUTER_LAYOUT.flags=layouts[variant].map(([x,z],i)=>[
+   (scenario%2?x:-x)+Math.round(5*Math.sin(scenario*1.7+i*1.3)),
+   z+Math.round(3*Math.cos(scenario*.85+i))
+ ]);
+ if(['town','canal','ruins','palace','fort','cave'].includes(kind)){
+   const center=Math.floor(OUTER_LAYOUT.flags.length/2),z=OUTER_LAYOUT.flags[center][1];
+   const room=OUTER_LAYOUT.interiors.reduce((best,r)=>Math.abs(r.z-z)<Math.abs(best.z-z)?r:best);
+   OUTER_LAYOUT.flags[center]=[room.x,room.z];OUTER_LAYOUT.indoor=room;OUTER_LAYOUT.indoorIndex=center;
+ }
 }
 
-for(const [id,themes]of Object.entries(OUTER_THEMES))OP_REGIONS[id]=[themes[0][0],themes[1][0],OP_NAMES[id],themes[2][0],themes[3][0]];
+for(const [id,themes]of Object.entries(OUTER_THEMES))OP_REGIONS[id]=[themes[0][0],themes[1][0],(Number(id)===5?'시베리아 횡단철도':OP_NAMES[id]),themes[2][0],themes[3][0]];
 function prepareOperationOuter(){if(!OP_OUTER)return;
   const scenario=OP_BOOT.scenario,oldNation=pickUniformNation;
   if(scenario===5){UNIFORMS.czech={name:'체코슬로바키아 군단',coat:0x85804b,trousers:0x65623e,helmet:0x726e43,webbing:0x49412b};UNIFORMS.soviet={name:'혁명군',coat:0xb49a40,trousers:0x8b7733,helmet:0xa38a36,webbing:0x51442b}}
@@ -3429,17 +3622,27 @@ function prepareOperationOuter(){if(!OP_OUTER)return;
 }
 function createOperationFlags(){if(!OP_OUTER)return false;
  const layout=OUTER_LAYOUT;
- for(const [i,[x,z]]of layout.flags.entries()){
-  const indoor=i===1&&layout.indoor;
-  const f=makeCaptureFlag(String.fromCharCode(65+i),layout.name+' · '+(indoor?'실내 지휘소':['전초 접근로','중앙 요충지','후방 차단선'][i]),x,getTerrainElevation(x,z),z,indoor?3.3:6,'field');
+ for(const [i,point]of layout.flags.entries()){
+  const indoor=i===layout.indoorIndex&&layout.indoor;
+  const [x,z]=clearObjective(point,indoor);
+  const f=makeCaptureFlag(String.fromCharCode(65+i),layout.name+' · '+(indoor?'실내 지휘소':['진입로','전초지','측면 통로','중앙 교차로','보급로','고지','방어선','후방 관문'][i]),x,getTerrainElevation(x,z),z,indoor?3.3:6,'field');
   if(indoor)f.indoorBounds={...layout.indoor};
   FL.push(f);
  }
  for(const team of[0,1])for(const [i,x]of[-40,0,40].entries())TRENCH_FLAGS.push(makeCaptureFlag((team?'북':'남')+(i+1),'후방 진지',x,0,(team?1:-1)*79.5,4.5,'trench',team));return true;
 }
+function decorateRegions(root,id){
+  const panels={6:[0,0],5:[2,0],4:[4,0],2:[0,2],1:[2,2],7:[4,2]};
+  const base=panels[id];if(!base)return;
+  [...root.querySelectorAll('.op-region')].forEach((el,index)=>{
+    if(index===2){el.style.setProperty('--region-image','var(--atlas)');return}
+    const v=index<2?index:index-1,x=base[0]+v%2,y=base[1]+Math.floor(v/2);
+    el.style.setProperty('--rx',(x*20)+'%');el.style.setProperty('--ry',(y*18+4)+'%');
+  });
+}
 function opShowMap(message='작전을 선택하십시오'){const s=OPERATIONS.state,root=OPERATIONS.screen;root.classList.remove('hid');V2.paused=true;resetHeldInput();try{document.exitPointerLock()}catch{}$('menu').classList.add('hid');
-  const names=opRegionNames(s.scenario);root.innerHTML='<div class="op-shell"><div class="op-kicker">OPERATIONS · 대전략 지도</div><h1>'+OP_NAMES[s.scenario]+' 작전</h1><p class="op-lead">'+message+'</p><div class="op-summary"><span>내 임무 <b>'+(s.team===s.attacker?'공격':'수비')+'</b></span><span>공격 잔여 대대 <b>'+s.battalions+'</b></span><span>공격 보급 <b>'+s.reserve+' / '+s.supply+'</b></span></div><div class="op-strategy">'+names.map((name,i)=>'<div class="op-region '+(i<s.front?'held':'defended')+(i===s.front?' frontline':'')+'"><span>대지역 '+(i+1)+(i===2?' · 주전장':'')+'</span><b>'+name+'</b><small>'+(i<s.front?'공격군 확보':i===s.front?'현재 전선 · '+(i===2?'기존 전장':'거점 3개'):'수비군 통제')+'</small></div>').join('')+'</div><p>이 지역의 모든 거점을 확보하면 다음 대지역으로 전선이 이동합니다.<br>공격 티켓이 소진되면 대대 1개를 잃고 같은 전선을 재공격합니다.</p><div class="op-actions"><button id="op-deploy">'+(OPERATIONS.transition?'다음 전장 불러오기':'전선 배치 · '+names[s.front])+'</button><button id="op-main">메인 화면</button></div></div>';
-  const palette=['#5387a3','#a55548'],teamNames=opSides(s.scenario),summary=root.querySelector('.op-summary');summary.innerHTML='<span style="border-left:8px solid '+palette[s.team]+'">내 진영 <b>'+teamNames[s.team]+'</b> · '+(s.team===s.attacker?'공격':'수비')+'</span>'+[s.attacker,1-s.attacker].map(t=>'<span>'+teamNames[t]+' 예비 '+s.bank[t]+' · 현지 '+(OPERATIONS.transition?0:tickets[t])+'</span>').join('');const board=root.querySelector('.op-strategy'),regions=[...board.children];regions.forEach((el,i)=>el.style.backgroundColor=palette[i<s.front?s.attacker:1-s.attacker]);if(s.team!==s.attacker)regions.reverse().forEach(el=>board.appendChild(el));root.querySelector('.op-strategy+p').textContent='현재 대지역의 모든 거점을 확보하면 전선이 이동합니다.';$('op-deploy').onclick=()=>{if(OPERATIONS.transition){opNavigate(s);return}root.classList.add('hid');if(started)requestBattleLock();else{$('go').click();signalWhistle(1)}V2.paused=false};$('op-main').onclick=opHome;
+  const names=opRegionNames(s.scenario);root.innerHTML='<div class="op-shell"><div class="op-kicker">OPERATIONS · 대전략 지도</div><h1>'+OP_NAMES[s.scenario]+' 작전</h1><p class="op-lead">'+message+'</p><div class="op-summary"><span>내 임무 <b>'+(s.team===s.attacker?'공격':'수비')+'</b></span><span>공격 잔여 대대 <b>'+s.battalions+'</b></span><span>공격 보급 <b>'+s.reserve+' / '+s.supply+'</b></span></div><div class="op-strategy">'+names.map((name,i)=>'<div class="op-region '+(i<s.front?'held':'defended')+(i===s.front?' frontline':'')+'"><span>대지역 '+(i+1)+(i===2?' · 주전장':'')+'</span><b>'+name+'</b><small>'+(i<s.front?'공격군 확보':i===s.front?'현재 전선 · '+(i===2?'주전장':'거점 '+[3,8,6,4,5][i]+'개'):'수비군 통제')+'</small></div>').join('')+'</div><p>이 지역의 모든 거점을 확보하면 다음 대지역으로 전선이 이동합니다.<br>공격 티켓이 소진되면 대대 1개를 잃고 같은 전선을 재공격합니다.</p><div class="op-actions"><button id="op-deploy">'+(OPERATIONS.transition?'다음 전장 불러오기':'전선 배치 · '+names[s.front])+'</button><button id="op-main">메인 화면</button></div></div>';
+  const palette=['#5387a3','#a55548'],teamNames=opSides(s.scenario),summary=root.querySelector('.op-summary');summary.innerHTML='<span style="border-left:8px solid '+palette[s.team]+'">내 진영 <b>'+teamNames[s.team]+'</b> · '+(s.team===s.attacker?'공격':'수비')+'</span>'+[s.attacker,1-s.attacker].map(t=>'<span>'+teamNames[t]+' 예비 '+s.bank[t]+' · 현지 '+(OPERATIONS.transition?0:tickets[t])+'</span>').join('');const board=root.querySelector('.op-strategy'),regions=[...board.children];regions.forEach((el,i)=>el.style.backgroundColor=palette[i<s.front?s.attacker:1-s.attacker]);decorateRegions(root,s.scenario);if(s.team!==s.attacker)regions.reverse().forEach(el=>board.appendChild(el));root.querySelector('.op-strategy+p').textContent='현재 대지역의 모든 거점을 확보하면 전선이 이동합니다.';$('op-deploy').onclick=()=>{if(OPERATIONS.transition){opNavigate(s);return}root.classList.add('hid');if(started)requestBattleLock();else{$('go').click();signalWhistle(1)}V2.paused=false};$('op-main').onclick=opHome;
 }
 function opHome(){location.replace(location.pathname+location.search+'#home');location.reload()}
 function opFinish(winner){const s=OPERATIONS.state;OPERATIONS.transition=true;V2.paused=true;over=true;resetHeldInput();try{document.exitPointerLock()}catch{}OPERATIONS.screen.classList.remove('hid');OPERATIONS.screen.innerHTML='<div class="op-shell"><div class="op-kicker">작전 종료</div><h1>'+(winner===s.team?'작전 승리':'작전 패배')+'</h1><p class="op-lead">'+(winner===s.attacker?'전 대지역 돌파 · 방어선 완전 장악':'공격 예비 병력 소진 · 방어선 유지')+'</p><button id="op-main">메인 화면</button></div>';$('op-main').onclick=opHome}
@@ -3457,7 +3660,7 @@ function opCheck(){if(!OPERATIONS.active||OPERATIONS.transition||over)return;con
   opShowMap(won?'공격군 대지역 승리 · 수비군 후퇴 · 잔여 티켓 회수 완료':tickets[a]<=0&&tickets[d]<=0?'양측 티켓 소진 · 같은 대지역에서 재편성':'수비군 대지역 승리 · 공격군 재편 · 잔여 티켓 회수 완료');
 }
 function initOperations(){const root=document.createElement('div');root.id='operations-screen';document.body.appendChild(root);OPERATIONS.screen=root;
-  if(!OPERATIONS.active){opMainMenu();return}const s=OPERATIONS.state;V2.phase='normal';V2.pending=null;if(!s.bank){s.bank=[3200,3200];s.bank[s.attacker]=3000}for(const t of [0,1]){tickets[t]=Math.min(s.bank[t],t===s.attacker?300:280);s.bank[t]-=tickets[t]}s.reserve=tickets[s.attacker];
+  if(!OPERATIONS.active){opMainMenu();return}const s=OPERATIONS.state;V2.phase='normal';V2.pending=null;if(!s.bank)s.bank=[1500,1500];for(const t of [0,1]){tickets[t]=Math.min(s.bank[t],300);s.bank[t]-=tickets[t]}s.reserve=tickets[s.attacker];
   for(const f of FL){f.owner=s.captured?.includes(f.n)?s.attacker:1-s.attacker;f.p=f.owner===0?1:-1}
   const plan=planHeadquarters;planHeadquarters=function(team,force){if(team===s.attacker){HQ[team].mode='A';return plan(team,force)}const targets=FL.filter(f=>f.owner!==s.attacker);const list=targets.length?targets:FL;HQ[team].mode='A';return HQ[team].plan={type:'operation-defense',label:'대지역 거점 분산 방어',groups:[0,1,2].map((_,i)=>({index:i,target:list[i%list.length],rally:null})),version:(HQ[team].plan?.version||0)+1,until:V2.time+8}};
   const objective=objectiveFor;objectiveFor=function(b){return HQ[b.team].plan?.groups[staffGroup(b)]?.target||objective(b)};
@@ -3470,9 +3673,13 @@ function initOperations(){const root=document.createElement('div');root.id='oper
   hqThink(0);hqThink(1);for(const b of B){assign(b);b.hv=-1}updateCaptureHUD();
   const button=document.createElement('button');button.textContent='작전 대전략 지도';button.onclick=e=>{e.stopPropagation();s.reserve=tickets[s.attacker];opShowMap('현재 전선과 공격 대대 현황')};$('pause').appendChild(button);opShowMap('공격군이 '+s.front+'개 대지역을 확보했습니다. '+(s.team===s.attacker?'전선을 돌파하십시오.':'현재 대지역의 거점을 방어하십시오.'));
 }
-function opMainMenu(){const root=OPERATIONS.screen;$('menu').classList.add('hid');V2.paused=true;root.innerHTML='<div class="op-shell"><div class="op-kicker">서부전선 1918 · V.16</div><h1>전선 너머</h1><p class="op-lead">오퍼레이터 모드 · 대대를 지휘하고 다섯 대지역을 돌파하십시오.</p><div class="op-scenarios">'+Object.entries(OP_NAMES).map(([id,name])=>'<button data-scenario="'+id+'" class="'+(Number(id)===3?'selected':'')+'"><small>시나리오 '+id+'</small><b>'+name+'</b><span>대지역 5개 · 중앙 주전장</span></button>').join('')+'</div><div class="op-options"><label>진영<select id="op-team"><option value="0">협상국 / 백군</option><option value="1">동맹국 / 적군</option></select></label><label>임무<select id="op-role"><option value="attack">공격</option><option value="defend">수비</option></select></label><label>공격 대대<select id="op-battalions"><option>2</option><option selected>3</option><option>5</option></select></label><label>대대당 티켓<select id="op-supply"><option>150</option><option selected>200</option><option>300</option></select></label></div><div class="op-actions"><button id="op-start">오퍼레이터 · 대전략 지도</button><button id="op-skirmish">기존 단일 전투</button></div><p>대지역의 모든 거점 확보 → 수비군 후퇴 → 다음 전장.<br>공격군의 모든 대대를 소모시키면 수비군이 승리합니다.</p></div>';
-  for(const id of ['op-battalions','op-supply'])$(id).parentElement.hidden=true;root.querySelector('.op-shell>p:last-child').textContent='공격군 3,000 · 수비군 3,200 티켓. 지역마다 최대 300 / 280을 투입하고 남은 티켓을 회수합니다.';root.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=()=>{OPERATIONS.selected=Number(b.dataset.scenario);root.querySelectorAll('[data-scenario]').forEach(c=>c.classList.toggle('selected',c===b));$('op-team').options[0].textContent=OPERATIONS.selected===5?'백군 · 체코군':OPERATIONS.selected===6?'아랍 반란군':'협상국';$('op-team').options[1].textContent=OPERATIONS.selected===5?'적군':OPERATIONS.selected===6?'오스만군':'동맹국'});
-  $('op-start').onclick=()=>{const team=Number($('op-team').value),supply=Number($('op-supply').value);opNavigate({version:1,scenario:OPERATIONS.selected,team,attacker:$('op-role').value==='attack'?team:1-team,front:1,battalions:Number($('op-battalions').value),supply,reserve:supply,captured:[],seed:Math.floor(Math.random()*1000000)})};$('op-skirmish').onclick=()=>{root.classList.add('hid');$('menu').classList.remove('hid')};
+function opMainMenu(){const root=OPERATIONS.screen;$('menu').classList.add('hid');V2.paused=true;root.innerHTML='<div class="op-shell"><div class="op-kicker">서부전선 1918  /  작전사령부</div><h1>전장 선택</h1><p class="op-lead">단일 전투에 배치하거나 다섯 대지역을 잇는 작전을 시작하십시오.</p><div class="op-scenarios">'+Object.entries(OP_NAMES).map(([id,name])=>'<button data-scenario="'+id+'" class="'+(Number(id)===3?'selected':'')+'"><small>시나리오 '+id+'</small><b>'+name+'</b><span>대지역 5개 · 중앙 주전장</span></button>').join('')+'</div><div class="op-options"><label>진영<select id="op-team"><option value="0">협상국 / 백군</option><option value="1">동맹국 / 적군</option></select></label><label>임무<select id="op-role"><option value="attack">공격</option><option value="defend">수비</option></select></label><label>공격 대대<select id="op-battalions"><option>2</option><option selected>3</option><option>5</option></select></label><label>대대당 티켓<select id="op-supply"><option>150</option><option selected>200</option><option>300</option></select></label></div><div class="op-actions"><button id="op-start">오퍼레이터 · 대전략 지도</button><button id="op-skirmish">단일 전투 배치</button></div><p>대지역의 모든 거점 확보 → 수비군 후퇴 → 다음 전장.<br>공격군의 모든 대대를 소모시키면 수비군이 승리합니다.</p></div>';
+  for(const id of ['op-battalions','op-supply'])$(id).parentElement.hidden=true;root.querySelector('.op-shell>p:last-child').textContent='양측 예비 병력 1,500 · 대지역마다 최대 300티켓 투입 · 생존 병력은 예비대로 복귀';root.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=()=>{OPERATIONS.selected=Number(b.dataset.scenario);root.querySelectorAll('[data-scenario]').forEach(c=>c.classList.toggle('selected',c===b));$('op-team').options[0].textContent=opSides(OPERATIONS.selected)[0];$('op-team').options[1].textContent=opSides(OPERATIONS.selected)[1]});
+  $('op-start').onclick=()=>{const team=Number($('op-team').value),supply=300;opNavigate({version:1,scenario:OPERATIONS.selected,team,attacker:$('op-role').value==='attack'?team:1-team,front:1,battalions:Number($('op-battalions').value),supply,reserve:supply,captured:[],seed:Math.floor(Math.random()*1000000)})};$('op-skirmish').onclick=()=>{
+    const team=Number($('op-team').value),id=OPERATIONS.selected;
+    if(team===MY&&id===STORY_MAP){root.classList.add('hid');$('go').click();return}
+    location.hash='deploy-'+(team?'g':'a')+id;location.reload();
+  };
 }
 
 initExpedition();initFrontlineV2();initRecordedMusic();initSupplyUI();initSupplyControls();initBattleRadio();initTannenbergUI();initImperial();initCavalryBatch();initRailway();initRailPhysics();initRailCommand();initTankTrainCollision();initBattleThemes();initMemorial();initSpectator();initPointsHUD();initRecon();initMotion();initWrecks();initSampleAudio();initAftermath();initRealism();initRailSiege();initWeaponReady();initPushableRubble();initRailDashboard();initUnitSystem();initSinai();syncMusicUI();
@@ -3557,14 +3764,14 @@ function buyGear(k){
   if(EXP.gearKey===sig)return;EXP.gearKey=sig;EXP.shopRenderKey=null;
   document.querySelectorAll('#shop-ui [data-tab]').forEach(b=>{const s=b.dataset.tab==='gear';b.classList.toggle('selected',s);b.setAttribute('aria-pressed',String(s))});
   $('shop-body').innerHTML=
-    '<button data-gear="plate" '+(PSQ.leader||PP<GEAR.plate?'disabled':'')+'>분대장 명패<br>'+GEAR.plate+'P<small>'+(PSQ.leader?'보유 중 (사망 시 소멸)':'분대원이 사망 전까지 나를 따르며 주변에서 엄폐·교전')+'</small></button>'+
+    '<button data-gear="plate" '+(PSQ.leader||PP<GEAR.plate?'disabled':'')+'>HQ 명패<br>'+GEAR.plate+'P<small>'+(PSQ.leader?'보유 중 (사망 시 소멸)':'분대 지휘 · T 지도에서 집중공격 / 필사수비 지정')+'</small></button>'+
     '<button data-gear="armor" '+(worn||PP<GEAR.armor?'disabled':'')+'>방탄복<br>'+GEAR.armor+'P<small>'+(worn?'착용 중 · 파손 후 재구매 가능':'추가 체력 +'+GEAR.armorMax+' · 탄약 상자로 +'+GEAR.armorAmmo+' 회복')+'</small></button>';
   $('shop-note').textContent='명패가 없으면 분대원 중 선두 1명이 목표로 이동하고 나머지가 그를 따릅니다. 내가 분대원을 따라가야 합니다.';
 }}
 $('shop-ui').addEventListener('click',e=>{const b=e.target.closest('[data-gear]');if(b)buyGear(b.dataset.gear)});
 
 // ===== V13 패치: 전차 상한 / 시나이 탈것 금지 =====
-const TANK_CAP={1:1,2:5,3:1,4:0,6:0};
+const TANK_CAP={1:1,2:5,3:1,4:0,6:0,7:1};
 function tankCapReached(team){const cap=TANK_CAP[STORY_MAP];if(cap===undefined)return false;return tanks.filter(t=>t.alive&&t.team===team&&!t.playerOwned&&!t.airship).length>=cap}
 {const obt=buyTank;buyTank=function(team,type,pl){
   if(tankCapReached(team)){if(pl)toast('이 전장의 전차 상한에 도달했습니다');return}
@@ -3613,9 +3820,11 @@ function tankCapReached(team){const cap=TANK_CAP[STORY_MAP];if(cap===undefined)r
 
 
 function installFrontWeather(){
- const id=OP_BOOT?.scenario??MAP,night=id===3||(id===5&&OP_BOOT?.front===3),outer=OP_OUTER;
+ const id=STORY_MAP,night=id===3||(id===5&&OP_BOOT?.front===3),outer=OP_OUTER;
  document.querySelectorAll('#menu .cur,#end .cur').forEach(el=>el.textContent=opSides(id)[MY]+' · '+storyPlace());const names=opSides(id);$('top').firstElementChild.querySelector('b').textContent=names[0];$('top').lastElementChild.querySelector('b').textContent=names[1];
- if(outer){const sky=night?0x111b30:[0,0x69615a,0xbcc8af,0,0x829083,0xc4d3e5,0xe0bd87][id];scene.background.setHex(sky);scene.fog.color.setHex(sky);scene.fog.near=id===2?8:24;scene.fog.far=id===2?73:150;sun.intensity=night?.46:1;sun.color.setHex(night?0x9db9dc:0xffdfab);
+ if(id===5&&!outer){scene.background.setHex(0xbac9d1);scene.fog.color.setHex(0xc3cfd5);scene.fog.near=35;scene.fog.far=165}
+ if(id===7&&!outer){scene.background.setHex(0x98a9b4);scene.fog.color.setHex(0xa5b3bc);scene.fog.near=30;scene.fog.far=168;sun.intensity=1.05;sun.color.setHex(0xffe5bc);const hemi=scene.children.find(o=>o.isHemisphereLight);if(hemi){hemi.color.setHex(0xc9d9e5);hemi.intensity=.88}if(rain)rain.visible=false}
+ if(outer){const sky=night?0x111b30:[0,0x69615a,0xbcc8af,0x9faebb,0x829083,0xc4d3e5,0xe0bd87,0xa6b5bf][id];scene.background.setHex(sky);scene.fog.color.setHex(sky);scene.fog.near=id===2?8:24;scene.fog.far=id===2?73:150;sun.intensity=night?.46:1;sun.color.setHex(night?0x9db9dc:0xffdfab);
  const rnd=opRandom(OP_BOOT.seed+OP_BOOT.front);for(let i=0;i<36;i++){const x=(i%2?1:-1)*(29+30*rnd()),z=-47+94*rnd(),y=getTerrainElevation(x,z);if(id===4){const m=new THREE.Mesh(new THREE.ConeGeometry(1.7,5,6),M(0x2c4530));m.position.set(x,y+2.5,z);scene.add(m);if(i%6===0)SWAMPS.push({x,z,r:4})}else if(id===1||id===3){const m=new THREE.Mesh(new THREE.CylinderGeometry(.09,.22,2+rnd()*2,5),M(0x292522));m.position.set(x,y+1,z);m.rotation.z=rnd()-.5;scene.add(m)}}
  if(id===5){const geo=new THREE.BufferGeometry(),a=new Float32Array(1200);for(let i=0;i<a.length;i+=3){a[i]=rnd()*120-60;a[i+1]=rnd()*30;a[i+2]=rnd()*150-75}geo.setAttribute('position',new THREE.BufferAttribute(a,3));scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:.13,color:0xffffff})));const render=renderBattle;renderBattle=function(dt,run){if(run){for(let i=1;i<a.length;i+=3)a[i]=(a[i]-dt*2+30)%30;geo.attributes.position.needsUpdate=true}render(dt,run)};
  if(night){for(let k=0;k<3;k++){const v=[];for(let j=0;j<48;j++){let x=-75+j*3,y=30+Math.sin(j*.15+k)*4,z=-64+k*2;v.push(x,y,z,x+3,y+1,z,x,y+8,z,x+3,y+1,z,x+3,y+9,z,x,y+8,z)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));scene.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:[0x53dba0,0x65bdce,0x9472c6][k],transparent:true,opacity:.29,side:2,depthWrite:false,fog:false})))}}}
@@ -3822,14 +4031,14 @@ function constrainTankTravel(e,ox,oz,r,list){
 (()=>{
   const baseVehicleNames={ft:'르노 FT',sc:'생샤몽',a7v:'독일 A7V',fcm:'FCM 2C',tsar:'차르 전차',airship:'비행선'};
   const rosters={
-    1:{0:['ft','sc','fcm'],1:['a7v','airship']},
-    2:{0:['ft','sc','fcm'],1:['a7v','airship']},
+    1:{0:['ft','mk1','sc','fcm'],1:['a7v','airship']},
+    2:{0:['ft','mk1','sc','fcm'],1:['a7v','airship']},
     3:{0:['ft','sc','fcm'],1:['a7v','airship']},
     4:{0:['ft','tsar'],1:['a7v','airship']},
     5:{0:['ft','sc'],1:['a7v','airship']},
-    6:{0:['ft','airship'],1:['a7v']}
+    6:{0:['ft','mk1','airship'],1:['a7v']}
   };
-  const vehicleRoles={ft:'경전차 · 기동 지원',sc:'돌격전차 · 보병 지원',fcm:'초중전차 · 15초 주포 장전',tsar:'다포탑 중전차 · 차르 전차',a7v:'중전차 · 기관총 다포탑',airship:'공중 정찰 · 선원 기총사격'};
+  const vehicleRoles={mk1:'영국 중전차 · 좌우 돌출포 2문',ft:'경전차 · 기동 지원',sc:'돌격전차 · 보병 지원',fcm:'초중전차 · 15초 주포 장전',tsar:'다포탑 중전차 · 차르 전차',a7v:'중전차 · 기관총 다포탑',airship:'공중 정찰 · 선원 기총사격'};
   function syncVehicleCatalog(){
     for(const [id,name]of Object.entries(baseVehicleNames))if(TT[id])TT[id].n=name;
     if(STORY_MAP===5){TT.a7v.n='멘델레예프 전차';TT.airship.n='관측 열기구'}
@@ -3837,7 +4046,7 @@ function constrainTankTravel(e,ox,oz,r,list){
     if(STORY_MAP===6){TT.ft.n='영국군 르노 FT';TT.airship.n='정찰 열기구';TT.a7v.n='오스만 장갑 돌격차량'}
   }
   syncVehicleCatalog();
-  availableVehicles=function(){return (rosters[STORY_MAP]?.[MY]||rosters[1][MY]).slice()};
+  availableVehicles=function(){return (rosters[STORY_MAP]?.[MY]||rosters[3][MY]).slice()};
   const oldRefresh=refreshShop;
   refreshShop=function(){
     oldRefresh();
@@ -3968,11 +4177,6 @@ function constrainTankTravel(e,ox,oz,r,list){
   opCheck=function(){
     if(!OPERATIONS.active||OPERATIONS.transition||over)return;
     const s=OPERATIONS.state,a=s.attacker,d=1-a;
-    if(!Array.isArray(s.emergency)||s.emergency.length!==2)s.emergency=[false,false];
-    const called=[];
-    if(tickets[a]<=0&&!s.emergency[a]){s.emergency[a]=true;tickets[a]=500;called.push(a)}
-    if(tickets[d]<=0&&s.front<4&&!s.emergency[d]){s.emergency[d]=true;tickets[d]=500;called.push(d)}
-    if(called.length){const names=opSides(s.scenario);msg('긴급 충원 · '+called.map(t=>names[t]).join(' / ')+' +500 티켓');toast('긴급 충원 500티켓 · 진영당 1회');updateCaptureHUD();return}
     const won=(tickets[d]<=0&&tickets[a]>0)||(tickets[a]>0&&FL.length>0&&FL.every(f=>f.owner===a));
     if(!won&&tickets[a]>0&&tickets[d]>0)return;
     const bothEmpty=tickets[a]<=0&&tickets[d]<=0,completed=s.front;
@@ -3986,7 +4190,7 @@ function constrainTankTravel(e,ox,oz,r,list){
     else s.captured=FL.filter(f=>f.owner===a).map(f=>f.n);
     const terminal=s.front>=5||s.bank[d]<=0||s.bank[a]<=0;
     const finalWinner=s.front>=5||s.bank[d]<=0?a:d;
-    showRegionAftermath(battleWinner,opRegionNames(s.scenario)[Math.max(0,completed-1)],caption,()=>{
+    showRegionAftermath(battleWinner,opRegionNames(s.scenario)[completed],caption,()=>{
       OPERATIONS.aftermath=null;
       if(terminal)opFinish(finalWinner);else opShowMap(mapMessage);
     },bothEmpty?'대지역 전투 종료 · 양측 재편성':undefined);
@@ -4003,21 +4207,8 @@ function constrainTankTravel(e,ox,oz,r,list){
 })();
 </script>
 <script>
-// V17.5 · 티켓 1,000제와 단회 긴급충원, 최후방 방어 예비대, 시베리아 관측기구.
+// 시베리아 관측기구와 단일 전투 최종전.
 (()=>{
-  const s=OPERATIONS.state;
-  if(OPERATIONS.active&&s){
-    if(!Array.isArray(s.emergency)||s.emergency.length!==2)s.emergency=[false,false];
-    if(!Array.isArray(s.bank)||s.bank.length!==2)s.bank=[1000,1000];
-    for(const team of[0,1]){
-      const total=s.emergency[team]?1500:1000;
-      s.bank[team]=Math.min(Math.max(0,s.bank[team]),Math.max(0,total-tickets[team]));
-    }
-    // The fifth (last) region draws every remaining defender ticket into its local reserve.
-    if(s.front>=4){const defender=1-s.attacker;tickets[defender]+=s.bank[defender];s.bank[defender]=0}
-  }
-  const main=document.querySelector('#operations-screen .op-shell>p:last-child');
-  if(main&&!OPERATIONS.active)main.textContent='공격군 1,000 · 수비군 1,000 티켓. 진영별 긴급 충원 +500은 작전 중 한 번만 가능합니다.';
   if(STORY_MAP===5) {TT.a7v.n='멘델레예프 전차';TT.airship.n='관측 열기구'}
   const oldCreateAirship=createAirship;
   createAirship=function(x,z){const t=oldCreateAirship(x,z);if(STORY_MAP===5&&t.team===1&&!t.observationBalloon)configureObservationBalloon(t);return t};
@@ -4183,4 +4374,83 @@ function constrainTankTravel(e,ox,oz,r,list){
 })();
 
 </script>
-</body></html>
+<script>
+(()=>{
+ const root=OPERATIONS.screen;
+ document.title='서부전선 1918 · '+(OPERATIONS.active?storyPlace():'일곱 전선의 작전도');
+ const help=document.createElement('dialog');help.id='dispatch-help';help.innerHTML='<h2>조작 안내</h2>';
+ const grid=document.querySelector('.help-grid');help.append(grid);
+ const instruction=document.createElement('p');instruction.textContent='J · 통신 기록 열기/닫기　 T · HQ 명패 지휘 및 포병 지원';help.append(instruction);
+ const close=document.createElement('button');close.textContent='닫기';close.onclick=()=>help.close();help.append(close);document.body.append(help);
+ const helpButton=parent=>{const b=document.createElement('button');b.textContent='조작 안내';b.onclick=e=>{e.stopPropagation();help.showModal()};parent?.append(b)};
+ helpButton($('pause'));helpButton(root.querySelector('.op-actions'));
+ const slots={6:[0,9],5:[71,9],4:[0,46],2:[71,46],1:[0,84],7:[71,84]};
+ root.querySelectorAll('[data-scenario]').forEach(b=>{const pos=slots[b.dataset.scenario];
+   if(pos){b.style.setProperty('--atlas-x',pos[0]+'%');b.style.setProperty('--atlas-y',pos[1]+'%')}else b.style.setProperty('--atlas','url("'+loadingImages[2]+'")');
+ });
+ if(!OPERATIONS.active){
+   root.querySelector('[data-scenario="3"]')?.click();
+   if(/^#(?:deploy-)?[ag][1-7]$/.test(location.hash)){
+     root.innerHTML='<div class="op-shell"><div class="op-kicker">단일 전투</div><h1></h1><p class="op-lead"></p><div class="op-actions"><button id="single-go">전투 시작</button><button id="single-back">전장 선택</button></div></div>';
+     root.querySelector('h1').textContent=MAPN[STORY_MAP];root.querySelector('p').textContent=opSides(STORY_MAP)[MY]+' · '+FL.length+'개 거점';
+     $('single-go').onclick=()=>{root.classList.add('hid');$('go').click()};$('single-back').onclick=opHome;helpButton(root.querySelector('.op-actions'));
+   }
+ }
+ // Keep pre-deployment preferences and the developer code accessible in both modes.
+ const settings=document.createElement('details');settings.innerHTML='<summary>배치 설정</summary>';
+ for(const selector of ['.view-controls','.music-controls','.developer-controls','.external-music']){
+   const control=document.querySelector('#menu '+selector);if(control&&selector!=='.view-controls')settings.append(control);
+ }
+ const view=$('view-mode'),mirror=document.createElement('select');mirror.innerHTML=view.innerHTML;mirror.value=view.value;mirror.onchange=()=>{view.value=mirror.value;view.dispatchEvent(new Event('change'))};
+ const label=document.createElement('label');label.textContent='시점 방식 ';label.append(mirror);settings.append(label);
+ root.querySelector('.op-shell')?.append(settings);
+ const showMap=opShowMap;opShowMap=function(...args){const r=showMap(...args);helpButton(root.querySelector('.op-actions'));root.querySelector('.op-shell')?.append(settings);return r};
+ const loader=loadingPanel;loader.querySelector('h1').textContent=OPERATIONS.active||location.hash.includes('deploy')?storyPlace():'전장 준비 중';
+ Promise.race([loadingPhoto.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,1500))]).then(()=>{
+   requestAnimationFrame(()=>setTimeout(()=>{loader.style.opacity='0';setTimeout(()=>loader.hidden=true,400)},550));
+ });
+ addEventListener('keydown',e=>{if(e.code==='KeyJ'&&!e.repeat&&started&&!V2.overlay&&!V2.paused){$('field-log').hidden=!$('field-log').hidden}});
+ const toolbar=document.createElement('div');toolbar.className='hq-tools';const queue=[];let mode='포격';
+ const modes=['포격','집중공격','필사수비','지우기'];
+ for(const m of modes){const b=document.createElement('button');b.textContent=m==='지우기'?'🗑 지우기':m;b.onclick=()=>{mode=m;refreshSupport()};toolbar.append(b)}
+ document.querySelector('.support-aside').prepend(toolbar);
+ const open=openSupport;openSupport=function(){mode='포격';return open()};
+ const refresh=refreshSupport;refreshSupport=function(){
+   refresh();toolbar.hidden=!PSQ.leader;toolbar.style.display=PSQ.leader?'flex':'none';
+   [...toolbar.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(mode===modes[i])));
+   if(PSQ.leader&&mode!=='포격')$('support-cost').textContent=mode+' · 지도에서 거점을 선택';
+ };
+ const draw=drawTacticalMap;drawTacticalMap=function(ctx,w,h,floor,large){
+   draw(ctx,w,h,floor,large);if(!large||!PSQ.leader)return;ctx.save();ctx.font='bold 13px sans-serif';
+   queue.forEach((order,i)=>{const f=order.flag;if(!routeOnFloor(f,floor))return;const [x,y]=mapPoint(f.x,f.z,w,h);
+     ctx.fillStyle='#101719';ctx.fillRect(x+6,y-18,71,16);ctx.fillStyle='#ffe4a4';ctx.textAlign='left';ctx.fillText((i+1)+' '+order.mode,x+9,y-5)});
+   ctx.restore();
+ };
+ $('support-map').addEventListener('click',e=>{
+   if(!PSQ.leader||mode==='포격'||V2.overlay!=='support')return;e.stopImmediatePropagation();
+   const p=canvasToWorld($('support-map'),e),candidate=activeFlags().filter(f=>routeOnFloor(f,SUPPORT.floor)).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];
+   if(!candidate||Math.hypot(candidate.x-p.x,candidate.z-p.z)>10){$('support-feedback').textContent='거점 표시 가까이를 선택하세요';return}
+   const idx=queue.findIndex(o=>o.flag===candidate);
+   if(mode==='지우기'){if(idx>=0)queue.splice(idx,1)}
+   else if(idx>=0)queue[idx].mode=mode;else queue.push({mode,flag:candidate});
+   hqThink(MY);for(const b of B)if(b.team===MY&&b.alive)b.hv=-1;
+   $('support-feedback').textContent=queue.map((o,i)=>(i+1)+'위 '+o.flag.n+' '+o.mode).join(' / ')||'지정 명령 없음';refreshSupport();
+ },true);
+ const plan=planHeadquarters;
+ planHeadquarters=function(team,force){
+   const h=HQ[team];if(h.plan?.fieldOrders)h.plan=h.plan.previous;
+   const base=plan(team,force);
+   if(team!==MY||!PSQ.leader||V2.phase!=='normal'||!queue.length)return base;
+   const candidates=queue.filter(o=>o.mode==='필사수비'||o.flag.owner!==team);
+   if(!candidates.length)return base;
+   const ranked=candidates.map((o,i)=>({o,score:6/(1+i)+Math.min(2,o.flag.counts[1-team]*.4)})).sort((a,b)=>b.score-a.score);
+   const allocations=ranked.map(()=>0);
+   const groups=base.groups.map(g=>{
+     let best=0;for(let i=1;i<ranked.length;i++)if(ranked[i].score/(1+allocations[i])>ranked[best].score/(1+allocations[best]))best=i;
+     allocations[best]++;return {...g,rally:null,target:ranked[best].o.flag};
+   });
+   return h.plan={...base,fieldOrders:true,previous:base,type:'priority',groups,label:'HQ 지정 · '+ranked[0].o.mode};
+ };
+ const damage=hurt;hurt=function(...args){const had=PSQ.leader;const result=damage(...args);if(had&&!PSQ.leader){queue.length=0;mode='포격'}return result};
+})();
+</script></body></html>
